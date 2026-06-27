@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rc-digital — Digitale Tools für den Mittelstand</title>
+<meta name="description" content="rc-digital entwickelt KI-gestützte SaaS-Tools für Handwerk, Gastronomie und Dienstleister. Pragmatisch. Direkt. Einsatzbereit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f1117;
+    --bg2:       #161820;
+    --bg3:       #1d1f2b;
+    --border:    #2a2d3e;
+    --text:      #f0f0eb;
+    --muted:     #8b8fa8;
+    --accent:    #2563eb;
+    --accent-hi: #3b82f6;
+    --live:      #22c55e;
+    --pilot:     #f59e0b;
+    --pre:       #6366f1;
+    --intern:    #64748b;
+    --proto:     #8b5cf6;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(1.5rem, 5vw, 4rem);
+    height: 60px;
+    background: rgba(15,17,23,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--text); text-decoration: none;
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.875rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px clamp(1.5rem, 5vw, 4rem) 4rem;
+    position: relative; overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; top: -40%; left: -10%;
+    width: 60vw; height: 60vw; max-width: 700px; max-height: 700px;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -0.03em;
+    max-width: 14ch;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--muted); max-width: 52ch;
+    line-height: 1.7; margin-bottom: 2.5rem;
+  }
+
+  .hero-cta-row {
+    display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--accent); color: #fff;
+    padding: 0.75rem 1.5rem; border-radius: 6px;
+    font-weight: 600; font-size: 0.9rem; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-hi); transform: translateY(-1px); }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    color: var(--muted); font-weight: 500; font-size: 0.9rem;
+    text-decoration: none; transition: color 0.2s;
+  }
+  .btn-ghost:hover { color: var(--text); }
+
+  .hero-stats {
+    display: flex; flex-wrap: wrap; gap: 2.5rem;
+    margin-top: 4rem; padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 0.2rem; }
+  .stat-num {
+    font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .stat-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+
+  /* ── SECTION WRAPPER ── */
+  section {
+    padding: 5rem clamp(1.5rem, 5vw, 4rem);
+  }
+
+  .section-eyebrow {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 800; letter-spacing: -0.025em;
+    margin-bottom: 0.75rem;
+  }
+  .section-sub {
+    color: var(--muted); font-size: 1rem; max-width: 58ch;
+    margin-bottom: 3rem; line-height: 1.7;
+  }
+
+  /* ── TOOL GRID ── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .tool-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1rem;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .tool-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(37,99,235,0.04) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .tool-card:hover {
+    border-color: rgba(37,99,235,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .tool-card:hover::after { opacity: 1; }
+
+  .card-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+  }
+
+  .card-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.2rem 0.6rem; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .status-badge::before {
+    content: '●'; font-size: 0.55rem; display: inline-block;
+  }
+  .status-live   { background: rgba(34,197,94,0.12);  color: var(--live);   border: 1px solid rgba(34,197,94,0.25); }
+  .status-pilot  { background: rgba(245,158,11,0.12); color: var(--pilot);  border: 1px solid rgba(245,158,11,0.25); }
+  .status-pre    { background: rgba(99,102,241,0.12); color: var(--pre);    border: 1px solid rgba(99,102,241,0.25); }
+  .status-intern { background: rgba(100,116,139,0.12);color: var(--intern); border: 1px solid rgba(100,116,139,0.25); }
+  .status-proto  { background: rgba(139,92,246,0.12); color: var(--proto);  border: 1px solid rgba(139,92,246,0.25); }
+
+  .card-name {
+    font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+  }
+  .card-target {
+    font-size: 0.78rem; color: var(--muted); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .card-desc {
+    font-size: 0.88rem; color: var(--muted); line-height: 1.6;
+    flex: 1;
+  }
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .card-price {
+    font-weight: 600; color: var(--text);
+  }
+  .card-link {
+    color: var(--accent); font-weight: 500;
+    display: inline-flex; align-items: center; gap: 0.3rem;
+  }
+  .card-link svg { width: 12px; height: 12px; }
+
+  /* ── ABOUT ── */
+  #ueber { background: var(--bg2); }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem; align-items: center;
+  }
+
+  .about-text h2 { margin-bottom: 1.25rem; }
+
+  .about-text p {
+    color: var(--muted); line-height: 1.8; margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .pillars {
+    display: flex; flex-direction: column; gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .pillar {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .pillar-icon {
+    font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 0.1rem;
+  }
+  .pillar-title {
+    font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem;
+  }
+  .pillar-desc {
+    font-size: 0.82rem; color: var(--muted); line-height: 1.5;
+  }
+
+  /* ── STACK ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .stack-item {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.9rem 1rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .stack-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+  }
+  .stack-name { font-size: 0.82rem; font-weight: 500; color: var(--muted); }
+
+  /* ── CONTACT ── */
+  #kontakt {
+    border-top: 1px solid var(--border);
+  }
+
+  .contact-inner {
+    max-width: 600px;
+  }
+  .contact-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 2rem;
+    margin-top: 2rem; display: flex; flex-direction: column; gap: 1.25rem;
+  }
+  .contact-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-row:last-child { padding-bottom: 0; border-bottom: none; }
+  .contact-icon {
+    width: 38px; height: 38px; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .contact-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.2rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; }
+  .contact-value { font-size: 0.92rem; font-weight: 500; }
+  .contact-value a { color: var(--text); text-decoration: none; }
+  .contact-value a:hover { color: var(--accent); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 2rem clamp(1.5rem, 5vw, 4rem);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  footer p { font-size: 0.78rem; color: var(--muted); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { font-size: 0.78rem; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--text); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 720px) {
+    .nav-links { display: none; }
+    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .hero-stats { gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">rc<span>-digital</span></a>
+  <ul class="nav-links">
+    <li><a href="#tools">Tools</a></li>
+    <li><a href="#ueber">Über uns</a></li>
+    <li><a href="#kontakt">Kontakt</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">rc-digital · Wernau bei Stuttgart</p>
+  <h1>Software, die im<br><em>Betrieb</em><br>funktioniert.</h1>
+  <p class="hero-sub">
+    Wir entwickeln KI-gestützte Tools für Handwerk, Gastronomie und
+    Dienstleister — kein Buzzword-Bingo, keine Beratungsmappe.
+    Direkt einsetzbar, direkt messbar.
+  </p>
+  <div class="hero-cta-row">
+    <a href="#tools" class="btn-primary">
+      Tools ansehen
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+    <a href="#kontakt" class="btn-ghost">
+      Kontakt aufnehmen →
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">8</span>
+      <span class="stat-label">Tools im Portfolio</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Live im Einsatz</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">KI</span>
+      <span class="stat-label">in jedem Tool</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">DACH</span>
+      <span class="stat-label">Marktfokus</span>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <p class="section-eyebrow">Portfolio</p>
+  <h2 class="section-title">Unsere Tools</h2>
+  <p class="section-sub">
+    Jedes Tool löst ein konkretes Problem — entwickelt aus der Praxis,
+    nicht am grünen Tisch.
+  </p>
+
+  <div class="tools-grid">
+
+    <a href="https://backki-app.de" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">🥐</div>
+        <span class="status-badge status-live">Live</span>
+      </div>
+      <div>
+        <div class="card-name">BackKI</div>
+        <div class="card-target">Bäckereien</div>
+      </div>
+      <p class="card-desc">KI-gestützte Retourenanalyse. Täglich erfassen, wöchentlich auswerten — und wissen, wo Teig, Energie und Marge verloren gehen.</p>
+      <div class="card-footer">
+        <span class="card-price">29 € / Analyse-Report</span>
+        <span class="card-link">backki-app.de <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/gtue-hu-vorab-check" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">🔧</div>
+        <span class="status-badge status-pilot">Pilot</span>
+      </div>
+      <div>
+        <div class="card-name">GTÜ HU-Vorab-Check</div>
+        <div class="card-target">KFZ-Halter</div>
+      </div>
+      <p class="card-desc">Digitale Checkliste zur HU-Vorbereitung. Kennzeichen eingeben — KI bewertet den wahrscheinlichen Prüfstatus anhand Fahrzeugdaten.</p>
+      <div class="card-footer">
+        <span class="card-price">Pilotbetrieb</span>
+        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/betriebspass" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">📋</div>
+        <span class="status-badge status-pre">Pre-Launch</span>
+      </div>
+      <div>
+        <div class="card-name">Betriebspass</div>
+        <div class="card-target">Selbständige & Einzelunternehmen</div>
+      </div>
+      <p class="card-desc">Digitale Betriebskontinuität für Soloselbständige. Zugänge, Verträge, Notfallkontakte — sicher hinterlegt, sofort abrufbar.</p>
+      <div class="card-footer">
+        <span class="card-price">39 € einmalig</span>
+        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/musa-baudesk" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">⚡</div>
+        <span class="status-badge status-proto">Prototyp</span>
+      </div>
+      <div>
+        <div class="card-name">BauDesk</div>
+        <div class="card-target">Elektriker & Handwerksbetriebe</div>
+      </div>
+      <p class="card-desc">Digitale Baustelle: Stempeluhr, Tagesrapport, Rechnungsübersicht und PDF-Export — ohne Papier, ohne Medienbruch.</p>
+      <div class="card-footer">
+        <span class="card-price">ab 59 € / Monat</span>
+        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/crashguide" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">🚗</div>
+        <span class="status-badge status-live">Live</span>
+      </div>
+      <div>
+        <div class="card-name">CrashGuide</div>
+        <div class="card-target">KFZ-Besitzer</div>
+      </div>
+      <p class="card-desc">KI-Schadenbewertung nach Unfall: Fotos hochladen, SF-Klassen-Berechnung, Kostenindikation — in Minuten statt Tagen.</p>
+      <div class="card-footer">
+        <span class="card-price">ab 3,99 €</span>
+        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/rc-klassiker" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">📊</div>
+        <span class="status-badge status-live">Live</span>
+      </div>
+      <div>
+        <div class="card-name">RC Wertdossier</div>
+        <div class="card-target">Oldtimer-Käufer & -Verkäufer</div>
+      </div>
+      <p class="card-desc">KI-gestützte Fahrzeugbewertung für den DACH-Klassikermarkt. Marktpreis, Zustandseinschätzung, exportierbares Dossier.</p>
+      <div class="card-footer">
+        <span class="card-price">4,99 € / Dossier</span>
+        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/eiswerk" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">❄️</div>
+        <span class="status-badge status-live">Aktiv</span>
+      </div>
+      <div>
+        <div class="card-name">Oldtimer Eiswerk</div>
+        <div class="card-target">Fahrzeugaufbereitung</div>
+      </div>
+      <p class="card-desc">Digitales Kundentool für Trockeneis-Strahlen. KI-Bildanalyse bewertet Reinigungsgrad und gibt eine Soforteinschätzung.</p>
+      <div class="card-footer">
+        <span class="card-price">Kostenfrei (Lead-Tool)</span>
+        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+    <a href="https://uri2503.github.io/gtue-rollout-dashboard" target="_blank" rel="noopener" class="tool-card">
+      <div class="card-top">
+        <div class="card-icon">📈</div>
+        <span class="status-badge status-intern">Intern</span>
+      </div>
+      <div>
+        <div class="card-name">GTÜ Rollout Dashboard</div>
+        <div class="card-target">Internes Steuerungstool</div>
+      </div>
+      <p class="card-desc">Szenario-Modell für den bundesweiten GTÜ-Rollout. Bundesland-Auswahl, konservative / optimistische Umsatzprojektion.</p>
+      <div class="card-footer">
+        <span class="card-price">Intern</span>
+        <span class="card-link">Dashboard <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ÜBER UNS -->
+<section id="ueber">
+  <div class="about-grid">
+    <div class="about-text">
+      <p class="section-eyebrow">Über uns</p>
+      <h2 class="section-title">Software aus der Praxis.</h2>
+      <p>
+        rc-digital entwickelt digitale Tools für Branchen, die von der
+        klassischen Softwareindustrie zu lange ignoriert wurden — Bäckereien,
+        Handwerksbetriebe, KFZ-Betriebe, Selbständige.
+      </p>
+      <p>
+        Unsere Tools entstehen nicht im Brainstorming-Meeting, sondern aus
+        echten Betriebsproblemen. Kurze Entwicklungszyklen, direktes Feedback,
+        schnelles Deployment. Kein Overhead, keine Beratungskultur.
+      </p>
+      <p>
+        Technisch setzen wir konsequent auf schlanke, wartbare Architekturen:
+        Single-file HTML, Supabase als Backend, Stripe für Payments,
+        Claude API für KI — alles ohne Framework-Bloat.
+      </p>
+
+      <div class="pillars">
+        <div class="pillar">
+          <span class="pillar-icon">⚙️</span>
+          <div>
+            <div class="pillar-title">Pragmatisch</div>
+            <div class="pillar-desc">Kein Tool, das erklärt werden muss. Wenn es nicht in 60 Sekunden klar ist, bauen wir es neu.</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <span class="pillar-icon">⚡</span>
+          <div>
+            <div class="pillar-title">Schnell deployt</div>
+            <div class="pillar-desc">Idee bis Pilot in Tagen, nicht Monaten. GitHub Pages, keine Infrastruktur-Diskussion.</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <span class="pillar-icon">🎯</span>
+          <div>
+            <div class="pillar-title">Ein Problem, eine Lösung</div>
+            <div class="pillar-desc">Kein Feature-Creep. Jedes Tool löst genau das, wofür es gebaut wurde.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="section-eyebrow">Technischer Stack</p>
+      <p style="font-size:0.85rem;color:var(--muted);margin:0.5rem 0 0;line-height:1.7;">
+        Alle Tools basieren auf demselben bewährten Stack —
+        kein Vendor-Lock-in, maximale Portabilität.
+      </p>
+      <div class="stack-grid">
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">Vanilla HTML / ES5</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">GitHub Pages</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">Supabase</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">Stripe Live</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">Claude Sonnet API</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">Edge Functions</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">jsPDF</span></div>
+        <div class="stack-item"><span class="stack-dot"></span><span class="stack-name">EU-Hosting (Frankfurt)</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KONTAKT -->
+<section id="kontakt">
+  <div class="contact-inner">
+    <p class="section-eyebrow">Kontakt</p>
+    <h2 class="section-title">Direkt reden.</h2>
+    <p class="section-sub">
+      Partneranfragen, Pilotprojekte oder Fragen zu einzelnen Tools —
+      kurze Nachricht genügt.
+    </p>
+
+    <div class="contact-box">
+      <div class="contact-row">
+        <div class="contact-icon">✉️</div>
+        <div>
+          <div class="contact-label">E-Mail</div>
+          <div class="contact-value"><a href="mailto:hallo@rc-digital.de">hallo@rc-digital.de</a></div>
+        </div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-icon">📍</div>
+        <div>
+          <div class="contact-label">Standort</div>
+          <div class="contact-value">Wernau (Neckar) · Baden-Württemberg</div>
+        </div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-icon">🌐</div>
+        <div>
+          <div class="contact-label">Web</div>
+          <div class="contact-value"><a href="https://rc-digital.de">rc-digital.de</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 rc-digital · Wernau bei Stuttgart</p>
+  <div class="footer-links">
+    <a href="#">Impressum</a>
+    <a href="#">Datenschutz</a>
+  </div>
+</footer>
+
+</body>
+</html>
