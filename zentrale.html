@@ -377,6 +377,19 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
 .doc-save-btn:hover { background: var(--accent-hi); }
 .doc-save-btn.saved { background: var(--s-live); }
 
+/* ── UPLOAD ── */
+.doc-upload-btn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.3rem 0.65rem; border-radius: 5px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 0.75rem; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.doc-upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+.doc-upload-btn.uploading { color: var(--pilot); border-color: var(--pilot); }
+.doc-upload-btn.done { color: var(--s-live); border-color: var(--s-live); }
+input.doc-file-input { display: none; }
+
 /* Projekt-Karte: Docs-Badge */
 .docs-badge {
   font-size: 0.62rem; font-weight: 700;
@@ -1034,6 +1047,7 @@ function renderDocs() {
     html += '<input type="text" placeholder="Titel" value="' + (existing ? existing.titel : '') + '" data-field="titel">';
     html += '<input type="text" placeholder="' + typ.ph + '" value="' + (existing ? existing.url : '') + '" data-field="url">';
     html += '<input type="text" placeholder="Notiz (optional)" value="' + (existing && existing.notiz ? existing.notiz : '') + '" data-field="notiz">';
+    html += '<label class="doc-upload-btn">📎 Datei hochladen<input type="file" class="doc-file-input" accept=".pdf,.html,.png,.jpg,.jpeg,.docx,.xlsx" onchange="uploadDocFile(this)"></label>';
     html += '</div>';
   });
 
@@ -1049,6 +1063,7 @@ function renderDocs() {
     html += '<input type="text" placeholder="Titel" value="' + d.titel + '" data-field="titel">';
     html += '<input type="text" placeholder="URL" value="' + d.url + '" data-field="url">';
     html += '<input type="text" placeholder="Notiz (optional)" value="' + (d.notiz || '') + '" data-field="notiz">';
+    html += '<label class="doc-upload-btn">📎 Datei hochladen<input type="file" class="doc-file-input" accept=".pdf,.html,.png,.jpg,.jpeg,.docx,.xlsx" onchange="uploadDocFile(this)"></label>';
     html += '</div>';
   });
 
@@ -1065,7 +1080,8 @@ function addDocRow() {
     '<div class="doc-slot-header"><span class="doc-slot-type">📎 Neues Dokument</span></div>' +
     '<input type="text" placeholder="Titel" data-field="titel">' +
     '<input type="text" placeholder="https://..." data-field="url">' +
-    '<input type="text" placeholder="Notiz (optional)" data-field="notiz">';
+    '<input type="text" placeholder="Notiz (optional)" data-field="notiz">' +
+    '<label class="doc-upload-btn">📎 Datei hochladen<input type="file" class="doc-file-input" accept=".pdf,.html,.png,.jpg,.jpeg,.docx,.xlsx" onchange="uploadDocFile(this)"></label>';
   el.appendChild(div);
 }
 
@@ -1078,6 +1094,48 @@ function deleteDoc(docId, btn) {
     currentDocs = currentDocs.filter(function(d) { return d.id !== docId; });
     renderDocs();
     updateDocsBadge();
+  });
+}
+
+function uploadDocFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var slot = input.closest('.doc-slot');
+  var label = input.closest('.doc-upload-btn');
+  label.textContent = '⏳ Lädt…';
+  label.classList.add('uploading');
+
+  // Dateiname: projektid/timestamp_filename
+  var safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  var path = (currentProjekt ? currentProjekt.id : 'allgemein') + '/' + Date.now() + '_' + safe;
+
+  fetch(SUPABASE_URL + '/storage/v1/object/projekt-docs/' + path, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: file
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('Upload fehlgeschlagen');
+    var publicUrl = SUPABASE_URL + '/storage/v1/object/public/projekt-docs/' + path;
+    // URL-Feld im Slot befüllen
+    var urlInput = slot.querySelector('[data-field="url"]');
+    if (urlInput) urlInput.value = publicUrl;
+    // Titel wenn leer
+    var titelInput = slot.querySelector('[data-field="titel"]');
+    if (titelInput && !titelInput.value) titelInput.value = file.name;
+    label.innerHTML = '✓ Hochgeladen<input type="file" class="doc-file-input" accept=".pdf,.html,.png,.jpg,.jpeg,.docx,.xlsx" onchange="uploadDocFile(this)">';
+    label.classList.remove('uploading');
+    label.classList.add('done');
+  })
+  .catch(function(e) {
+    label.innerHTML = '❌ Fehler<input type="file" class="doc-file-input" accept=".pdf,.html,.png,.jpg,.jpeg,.docx,.xlsx" onchange="uploadDocFile(this)">';
+    label.classList.remove('uploading');
+    console.error(e);
   });
 }
 
