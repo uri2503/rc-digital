@@ -456,6 +456,13 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
     </div>
     <input type="tel" class="pin-input" id="pin-input" placeholder="____"
       maxlength="6" autocomplete="off" inputmode="numeric">
+    <div style="display:flex;flex-direction:column;gap:0.4rem">
+      <label style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)">GitHub Token (optional)</label>
+      <input type="password" id="gh-token-input" placeholder="github_pat_..." autocomplete="off"
+        style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.65rem 0.85rem;color:var(--text);font-size:0.78rem;font-family:var(--mono);outline:none;width:100%;transition:border-color 0.2s"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      <span style="font-size:0.7rem;color:var(--muted)">Für GitHub-Sync. Wird lokal gespeichert.</span>
+    </div>
     <button class="btn-login" id="btn-login" onclick="doLogin()">Einloggen</button>
     <div class="login-error" id="login-error">Falscher PIN. Bitte nochmal versuchen.</div>
   </div>
@@ -471,6 +478,7 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
     <div class="topbar-right">
       <button class="tab-btn active" id="tab-intern" onclick="showView('intern')">⚙ Steuerung</button>
       <button class="tab-btn" id="tab-public" onclick="showView('public')">🌐 Außenansicht</button>
+      <button class="logout-btn" onclick="showTokenModal()" title="GitHub Token verwalten">🔑</button>
       <button class="logout-btn" onclick="logout()">Abmelden</button>
     </div>
   </nav>
@@ -612,6 +620,15 @@ window.doLogin = function() {
   var raw = document.getElementById('pin-input').value;
   var val = raw.replace(/\s/g, '');
   if (val === PIN || val === PIN.toLowerCase() || val.toUpperCase() === PIN) {
+    // GitHub Token speichern wenn eingegeben
+    var ghInput = document.getElementById('gh-token-input').value.trim();
+    if (ghInput) {
+      localStorage.setItem('rc_gh_token', ghInput);
+      GITHUB_TOKEN = ghInput;
+    } else {
+      var saved = localStorage.getItem('rc_gh_token');
+      if (saved) GITHUB_TOKEN = saved;
+    }
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadProjekte();
@@ -629,33 +646,103 @@ window.logout = function() {
   document.getElementById('pin-input').value = '';
 }
 
+var GITHUB_TOKEN = localStorage.getItem('rc_gh_token') || '';
+var GITHUB_USER  = 'uri2503';
+
 // ── DATA ──
 function loadProjekte() {
   var grid = document.getElementById('projekt-grid');
-  grid.innerHTML = '<div class="empty-state"><div class="big">⏳</div><p>Projekte werden geladen…</p></div>';
+  grid.innerHTML = '<div class="empty-state"><div class="big">⏳</div><p>Synchronisiere mit GitHub…</p></div>';
 
-  fetch(SUPABASE_URL + '/rest/v1/rc_projekte?select=*&order=sort_order.asc', {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  // 1. Alle GitHub Repos laden (bis 100)
+  fetch('https://api.github.com/users/' + GITHUB_USER + '/repos?per_page=100&type=all', {
+    headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
   })
-  .then(function(r) {
-    if (!r.ok) {
-      return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ': ' + t); });
-    }
-    return r.json();
-  })
-  .then(function(data) {
-    if (!Array.isArray(data)) {
-      throw new Error('Ungültige Antwort: ' + JSON.stringify(data));
-    }
-    allProjekte = data;
-    renderStats();
-    renderGrid();
-    renderPublic();
+  .then(function(r) { return r.json(); })
+  .then(function(ghRepos) {
+    var ghNames = ghRepos.map(function(r) { return r.name; });
+
+    // 2. Supabase laden
+    return fetch(SUPABASE_URL + '/rest/v1/rc_projekte?select=*&order=sort_order.asc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(projekte) {
+      if (!Array.isArray(projekte)) projekte = [];
+      var bekannteRepos = projekte.map(function(p) { return (p.repo || '').toLowerCase(); });
+
+      // 3. Neue Repos finden
+      var neueRepos = ghRepos.filter(function(r) {
+        return bekannteRepos.indexOf(r.name.toLowerCase()) === -1;
+      });
+
+      if (neueRepos.length === 0) {
+        allProjekte = projekte;
+        renderStats(); renderGrid(); renderPublic();
+        return;
+      }
+
+      // 4. Neue Repos in Supabase anlegen
+      var maxSort = projekte.reduce(function(m, p) { return Math.max(m, p.sort_order || 0); }, 0);
+      var inserts = neueRepos.map(function(r, i) {
+        return {
+          name: r.name,
+          brand: 'intern',
+          status: 'wip',
+          repo: r.name,
+          sort_order: maxSort + i + 1,
+          hat_stripe: false,
+          hat_supabase: false,
+          oeffentlich: false,
+          beschreibung: r.description || ''
+        };
+      });
+
+      return fetch(SUPABASE_URL + '/rest/v1/rc_projekte', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(inserts)
+      })
+      .then(function() {
+        // Nochmal laden mit neuen Einträgen
+        return fetch(SUPABASE_URL + '/rest/v1/rc_projekte?select=*&order=sort_order.asc', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        }).then(function(r) { return r.json(); });
+      })
+      .then(function(data) {
+        allProjekte = Array.isArray(data) ? data : [];
+        var syncMsg = neueRepos.length + ' neue Repo(s) synchronisiert: ' + neueRepos.map(function(r){return r.name;}).join(', ');
+        console.log(syncMsg);
+        renderStats(); renderGrid(); renderPublic();
+        // Kurze Sync-Meldung anzeigen
+        showSyncToast(neueRepos.length);
+      });
+    });
   })
   .catch(function(e) {
-    console.error('Supabase Fehler:', e);
-    grid.innerHTML = '<div class="empty-state"><div class="big">⚠️</div><p style="color:#ef4444">Ladefehler: ' + e.message + '</p><p style="margin-top:0.5rem;font-size:0.8rem">Supabase RLS oder Netzwerk prüfen.</p></div>';
+    console.error('Sync Fehler:', e);
+    // Fallback: nur Supabase laden
+    fetch(SUPABASE_URL + '/rest/v1/rc_projekte?select=*&order=sort_order.asc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      allProjekte = Array.isArray(data) ? data : [];
+      renderStats(); renderGrid(); renderPublic();
+      grid.innerHTML += '';
+    });
   });
+}
+
+function showSyncToast(count, msg) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:0.6rem 1.2rem;border-radius:8px;font-size:0.82rem;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3)';
+  t.textContent = msg || ('✓ ' + count + ' neue Repo(s) aus GitHub synchronisiert');
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 4000);
 }
 
 // ── STATS ──
@@ -1045,5 +1132,64 @@ function updateDocsBadge() {
   });
 }
 </script>
+<!-- TOKEN MODAL -->
+<div id="token-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)closeTokenModal()">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:2rem;max-width:400px;width:100%;display:flex;flex-direction:column;gap:1rem">
+    <div style="font-size:1.1rem;font-weight:800">🔑 GitHub Token</div>
+    <p style="font-size:0.82rem;color:var(--muted);line-height:1.6">Token wird lokal im Browser gespeichert (localStorage). Kein Server, kein Upload. Neuen Token auf github.com → Settings → Developer settings → Tokens (classic) generieren. Scope: nur <code style="background:var(--bg3);padding:0.1rem 0.3rem;border-radius:3px">public_repo</code>.</p>
+    <input type="password" id="token-modal-input" placeholder="github_pat_..."
+      style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.75rem;color:var(--text);font-size:0.82rem;font-family:var(--mono);outline:none;width:100%;transition:border-color 0.2s"
+      onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    <div id="token-status" style="font-size:0.75rem;color:var(--muted)"></div>
+    <div style="display:flex;gap:0.75rem">
+      <button onclick="saveToken()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0.7rem;font-size:0.88rem;font-weight:600;cursor:pointer">Speichern & Sync</button>
+      <button onclick="closeTokenModal()" style="background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:0.7rem 1rem;font-size:0.88rem;cursor:pointer">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTokenModal() {
+  var saved = localStorage.getItem('rc_gh_token') || '';
+  var inp = document.getElementById('token-modal-input');
+  inp.value = saved;
+  var status = document.getElementById('token-status');
+  if (saved) {
+    var preview = saved.substring(0, 8) + '…' + saved.substring(saved.length - 4);
+    status.textContent = 'Aktuell gespeichert: ' + preview;
+    status.style.color = 'var(--s-live)';
+  } else {
+    status.textContent = 'Kein Token gespeichert — GitHub-Sync deaktiviert.';
+    status.style.color = 'var(--muted)';
+  }
+  var ov = document.getElementById('token-overlay');
+  ov.style.display = 'flex';
+}
+function closeTokenModal() {
+  document.getElementById('token-overlay').style.display = 'none';
+}
+function saveToken() {
+  var val = document.getElementById('token-modal-input').value.trim();
+  if (val) {
+    localStorage.setItem('rc_gh_token', val);
+    GITHUB_TOKEN = val;
+    closeTokenModal();
+    showSyncToast(0, 'Token gespeichert — Sync läuft…');
+    loadProjekte();
+  } else {
+    localStorage.removeItem('rc_gh_token');
+    GITHUB_TOKEN = '';
+    document.getElementById('token-status').textContent = 'Token gelöscht.';
+    document.getElementById('token-status').style.color = '#ef4444';
+  }
+}
+
+// Token beim Start aus localStorage laden
+(function() {
+  var saved = localStorage.getItem('rc_gh_token');
+  if (saved) GITHUB_TOKEN = saved;
+})();
+</script>
+
 </body>
 </html>
