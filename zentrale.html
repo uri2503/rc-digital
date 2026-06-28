@@ -941,7 +941,7 @@ function renderDocs() {
     html += '<div class="doc-slot-actions">';
     if (existing) {
       html += '<a href="' + existing.url + '" target="_blank" class="doc-open-btn">↗ Öffnen</a>';
-      html += '<button class="doc-del-btn" onclick="deleteDoc('' + existing.id + '', this)">✕</button>';
+      html += '<button class="doc-del-btn" onclick="deleteDoc(\'' + existing.id + '\', this)">✕</button>';
     }
     html += '</div></div>';
     html += '<input type="text" placeholder="Titel" value="' + (existing ? existing.titel : '') + '" data-field="titel">';
@@ -957,7 +957,7 @@ function renderDocs() {
     html += '<span class="doc-slot-type has-doc">📎 Dokument</span>';
     html += '<div class="doc-slot-actions">';
     html += '<a href="' + d.url + '" target="_blank" class="doc-open-btn">↗ Öffnen</a>';
-    html += '<button class="doc-del-btn" onclick="deleteDoc('' + d.id + '', this)">✕</button>';
+    html += '<button class="doc-del-btn" onclick="deleteDoc(\'' + d.id + '\', this)">✕</button>';
     html += '</div></div>';
     html += '<input type="text" placeholder="Titel" value="' + d.titel + '" data-field="titel">';
     html += '<input type="text" placeholder="URL" value="' + d.url + '" data-field="url">';
