@@ -70,7 +70,7 @@ body {
 .login-box p { font-size: 0.85rem; color: var(--muted); }
 .pin-input {
   font-family: var(--mono); font-size: 1.4rem; font-weight: 600;
-  letter-spacing: 0.2em; text-align: center;
+  letter-spacing: 0; text-align: center;
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: 8px; padding: 0.9rem 1rem;
   color: var(--text); width: 100%;
@@ -609,13 +609,15 @@ document.getElementById('pin-input').addEventListener('keydown', function(e) {
 });
 
 function doLogin() {
-  var val = document.getElementById('pin-input').value.trim();
-  if (val === PIN) {
+  var raw = document.getElementById('pin-input').value;
+  var val = raw.replace(/\s/g, '');
+  if (val === PIN || val === PIN.toLowerCase() || val.toUpperCase() === PIN) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadProjekte();
   } else {
     document.getElementById('pin-input').classList.add('error');
+    document.getElementById('login-error').textContent = 'Eingabe war: "' + val + '" (erwartet: ' + PIN + ')';
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('pin-input').value = '';
   }
