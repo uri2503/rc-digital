@@ -310,6 +310,81 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
 }
 .panel-link:hover { border-color: var(--accent); }
 
+/* ── PANEL TABS ── */
+.panel-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+.panel-tab {
+  flex: 1; padding: 0.55rem 0.5rem; font-size: 0.78rem; font-weight: 600;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--muted); cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.panel-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.panel-tab-content { display: none; }
+.panel-tab-content.active { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── DOCS ── */
+.doc-slot {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.75rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.doc-slot-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.doc-slot-type {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted);
+}
+.doc-slot-type.has-doc { color: var(--accent); }
+.doc-slot-actions { display: flex; gap: 0.3rem; }
+.doc-open-btn {
+  font-size: 0.75rem; padding: 0.2rem 0.5rem;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--accent); cursor: pointer;
+  text-decoration: none; transition: all 0.15s;
+}
+.doc-open-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.doc-del-btn {
+  font-size: 0.75rem; padding: 0.2rem 0.4rem;
+  background: none; border: 1px solid var(--border);
+  border-radius: 5px; color: var(--muted); cursor: pointer;
+  transition: all 0.15s;
+}
+.doc-del-btn:hover { color: #ef4444; border-color: #ef4444; }
+.doc-slot input {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.45rem 0.65rem;
+  font-size: 0.8rem; color: var(--text); font-family: inherit;
+  outline: none; width: 100%; transition: border-color 0.2s;
+}
+.doc-slot input:focus { border-color: var(--accent); }
+.doc-slot input::placeholder { color: var(--muted); }
+.doc-add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.55rem; border-radius: 7px;
+  background: none; border: 1px dashed var(--border);
+  color: var(--muted); font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; width: 100%;
+}
+.doc-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.doc-save-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 0.65rem; font-size: 0.85rem;
+  font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s;
+}
+.doc-save-btn:hover { background: var(--accent-hi); }
+.doc-save-btn.saved { background: var(--s-live); }
+
+/* Projekt-Karte: Docs-Badge */
+.docs-badge {
+  font-size: 0.62rem; font-weight: 700;
+  padding: 0.1rem 0.35rem; border-radius: 4px;
+  background: rgba(37,99,235,0.15); color: var(--accent);
+  border: 1px solid rgba(37,99,235,0.3); margin-left: 0.3rem;
+}
+
 /* ── ÖFFENTLICHE ANSICHT ── */
 #public-view { display: none; padding: 2rem 1.5rem 4rem; }
 .public-header {
@@ -439,43 +514,60 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
     <button class="panel-close" onclick="closeOverlay()">✕ Schließen</button>
     <div class="panel-name" id="panel-name"></div>
 
-    <div class="panel-section">
-      <div class="panel-label">Status</div>
-      <select class="panel-field" id="p-status">
-        <option value="live">● Live</option>
-        <option value="wip">◐ WIP</option>
-        <option value="pause">⏸ Pause</option>
-        <option value="intern">🔒 Intern</option>
-      </select>
+    <!-- TABS -->
+    <div class="panel-tabs">
+      <button class="panel-tab active" id="ptab-btn-info" onclick="switchPanelTab('info')">⚙ Info</button>
+      <button class="panel-tab" id="ptab-btn-docs" onclick="switchPanelTab('docs')">📁 Dokumente</button>
+      <button class="panel-tab" id="ptab-btn-links" onclick="switchPanelTab('links')">🔗 Links</button>
     </div>
 
-    <div class="panel-section">
-      <div class="panel-label">Öffentlich sichtbar</div>
-      <div class="panel-toggle-row">
-        <div class="toggle-wrap">
-          <input type="checkbox" class="toggle" id="p-public">
-          <span id="p-public-label">Nicht sichtbar</span>
+    <!-- TAB: INFO -->
+    <div class="panel-tab-content active" id="ptab-info">
+      <div class="panel-section">
+        <div class="panel-label">Status</div>
+        <select class="panel-field" id="p-status">
+          <option value="live">● Live</option>
+          <option value="wip">◐ WIP</option>
+          <option value="pause">⏸ Pause</option>
+          <option value="intern">🔒 Intern</option>
+        </select>
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Öffentlich sichtbar</div>
+        <div class="panel-toggle-row">
+          <div class="toggle-wrap">
+            <input type="checkbox" class="toggle" id="p-public">
+            <span id="p-public-label">Nicht sichtbar</span>
+          </div>
+          <span class="public-badge" id="p-public-badge" style="display:none">🌐 Sichtbar</span>
         </div>
-        <span class="public-badge" id="p-public-badge" style="display:none">🌐 Sichtbar</span>
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Beschreibung (öffentlich)</div>
+        <textarea class="panel-field" id="p-beschreibung" placeholder="Was macht dieses Tool? Für wen?"></textarea>
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Notizen (intern)</div>
+        <textarea class="panel-field" id="p-notizen" placeholder="Interne Notizen, TODO, Ideen…"></textarea>
+      </div>
+      <button class="btn-save" id="btn-save" onclick="savePanel()">Speichern</button>
+    </div>
+
+    <!-- TAB: DOKUMENTE -->
+    <div class="panel-tab-content" id="ptab-docs">
+      <div id="docs-list"></div>
+      <button class="doc-add-btn" onclick="addDocRow()">+ Dokument hinzufügen</button>
+      <button class="doc-save-btn" id="btn-doc-save" onclick="saveDocs()">Dokumente speichern</button>
+    </div>
+
+    <!-- TAB: LINKS -->
+    <div class="panel-tab-content" id="ptab-links">
+      <div class="panel-section">
+        <div class="panel-label">Live-URL & GitHub</div>
+        <div id="p-links-list"></div>
       </div>
     </div>
 
-    <div class="panel-section">
-      <div class="panel-label">Beschreibung (öffentlich)</div>
-      <textarea class="panel-field" id="p-beschreibung" placeholder="Was macht dieses Tool? Für wen?"></textarea>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Notizen (intern)</div>
-      <textarea class="panel-field" id="p-notizen" placeholder="Interne Notizen, TODO, Ideen…"></textarea>
-    </div>
-
-    <div class="panel-section" id="p-links-section">
-      <div class="panel-label">Links</div>
-      <div id="p-links-list"></div>
-    </div>
-
-    <button class="btn-save" id="btn-save" onclick="savePanel()">Speichern</button>
   </div>
 </div>
 
@@ -724,11 +816,23 @@ function showView(v) {
   document.getElementById('tab-public').classList.toggle('active', v === 'public');
 }
 
+// ── PANEL TABS ──
+var currentPanelTab = 'info';
+function switchPanelTab(tab) {
+  currentPanelTab = tab;
+  ['info','docs','links'].forEach(function(t) {
+    document.getElementById('ptab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('ptab-btn-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'docs' && currentProjekt) loadDocs(currentProjekt.id);
+}
+
 // ── DETAIL PANEL ──
 function openPanel(id) {
   var p = allProjekte.find(function(x) { return x.id === id; });
   if (!p) return;
   currentProjekt = p;
+  switchPanelTab('info');
 
   document.getElementById('panel-name').textContent = p.name || '—';
   document.getElementById('p-status').value = p.status || 'wip';
@@ -744,7 +848,7 @@ function openPanel(id) {
     document.getElementById('p-public-badge').style.display = pubCb.checked ? 'inline-flex' : 'none';
   };
 
-  // Links
+  // Links Tab
   var linksHtml = '';
   if (p.live_url) {
     linksHtml += '<div class="panel-link-row"><a href="' + p.live_url + '" target="_blank" class="panel-link">' + p.live_url + '</a><a href="' + p.live_url + '" target="_blank" class="icon-btn">↗</a></div>';
@@ -755,10 +859,8 @@ function openPanel(id) {
   }
   document.getElementById('p-links-list').innerHTML = linksHtml || '<span style="font-size:0.8rem;color:var(--muted)">Keine Links hinterlegt</span>';
 
-  var btn = document.getElementById('btn-save');
-  btn.textContent = 'Speichern';
-  btn.className = 'btn-save';
-
+  document.getElementById('btn-save').textContent = 'Speichern';
+  document.getElementById('btn-save').className = 'btn-save';
   document.getElementById('overlay').classList.add('open');
 }
 
@@ -778,7 +880,6 @@ function savePanel() {
     beschreibung: document.getElementById('p-beschreibung').value,
     notizen:      document.getElementById('p-notizen').value
   };
-
   fetch(SUPABASE_URL + '/rest/v1/rc_projekte?id=eq.' + currentProjekt.id, {
     method: 'PATCH',
     headers: {
@@ -791,21 +892,155 @@ function savePanel() {
   })
   .then(function(r) {
     if (r.ok) {
-      // Lokal updaten
       Object.assign(currentProjekt, updates);
-      renderStats();
-      renderGrid();
-      renderPublic();
+      renderStats(); renderGrid(); renderPublic();
       var btn = document.getElementById('btn-save');
       btn.textContent = '✓ Gespeichert';
       btn.classList.add('saved');
-      setTimeout(function() {
-        btn.textContent = 'Speichern';
-        btn.classList.remove('saved');
-      }, 2000);
+      setTimeout(function() { btn.textContent = 'Speichern'; btn.classList.remove('saved'); }, 2000);
     }
   })
   .catch(function(e) { console.error(e); });
+}
+
+// ── DOKUMENTE ──
+var currentDocs = [];
+var DOC_TYPEN = [
+  { key: 'roi',       label: '📊 ROI-Rechner',    ph: 'https://uri2503.github.io/...' },
+  { key: 'szenario',  label: '🔭 Szenarioplaner',  ph: 'https://uri2503.github.io/...' },
+  { key: 'protokoll', label: '📋 Tagesprotokoll',  ph: 'https://docs.google.com/...' },
+  { key: 'workflow',  label: '⚙ Projekt-Workflow', ph: 'https://uri2503.github.io/...' }
+];
+
+function loadDocs(projektId) {
+  var el = document.getElementById('docs-list');
+  el.innerHTML = '<p style="font-size:0.8rem;color:var(--muted);padding:0.5rem 0">Lädt…</p>';
+  fetch(SUPABASE_URL + '/rest/v1/rc_projekt_docs?projekt_id=eq.' + projektId + '&order=erstellt_am.asc', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    currentDocs = Array.isArray(data) ? data : [];
+    renderDocs();
+  })
+  .catch(function() { currentDocs = []; renderDocs(); });
+}
+
+function renderDocs() {
+  var el = document.getElementById('docs-list');
+  var html = '';
+
+  // Standard-Slots
+  DOC_TYPEN.forEach(function(typ) {
+    var existing = currentDocs.find(function(d) { return d.typ === typ.key; });
+    html += '<div class="doc-slot" data-typ="' + typ.key + '" data-id="' + (existing ? existing.id : '') + '">';
+    html += '<div class="doc-slot-header">';
+    html += '<span class="doc-slot-type' + (existing ? ' has-doc' : '') + '">' + typ.label + '</span>';
+    html += '<div class="doc-slot-actions">';
+    if (existing) {
+      html += '<a href="' + existing.url + '" target="_blank" class="doc-open-btn">↗ Öffnen</a>';
+      html += '<button class="doc-del-btn" onclick="deleteDoc('' + existing.id + '', this)">✕</button>';
+    }
+    html += '</div></div>';
+    html += '<input type="text" placeholder="Titel" value="' + (existing ? existing.titel : '') + '" data-field="titel">';
+    html += '<input type="text" placeholder="' + typ.ph + '" value="' + (existing ? existing.url : '') + '" data-field="url">';
+    html += '<input type="text" placeholder="Notiz (optional)" value="' + (existing && existing.notiz ? existing.notiz : '') + '" data-field="notiz">';
+    html += '</div>';
+  });
+
+  // Custom Docs
+  currentDocs.filter(function(d) { return d.typ === 'custom'; }).forEach(function(d) {
+    html += '<div class="doc-slot" data-typ="custom" data-id="' + d.id + '">';
+    html += '<div class="doc-slot-header">';
+    html += '<span class="doc-slot-type has-doc">📎 Dokument</span>';
+    html += '<div class="doc-slot-actions">';
+    html += '<a href="' + d.url + '" target="_blank" class="doc-open-btn">↗ Öffnen</a>';
+    html += '<button class="doc-del-btn" onclick="deleteDoc('' + d.id + '', this)">✕</button>';
+    html += '</div></div>';
+    html += '<input type="text" placeholder="Titel" value="' + d.titel + '" data-field="titel">';
+    html += '<input type="text" placeholder="URL" value="' + d.url + '" data-field="url">';
+    html += '<input type="text" placeholder="Notiz (optional)" value="' + (d.notiz || '') + '" data-field="notiz">';
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function addDocRow() {
+  var el = document.getElementById('docs-list');
+  var div = document.createElement('div');
+  div.className = 'doc-slot';
+  div.setAttribute('data-typ', 'custom');
+  div.setAttribute('data-id', '');
+  div.innerHTML =
+    '<div class="doc-slot-header"><span class="doc-slot-type">📎 Neues Dokument</span></div>' +
+    '<input type="text" placeholder="Titel" data-field="titel">' +
+    '<input type="text" placeholder="https://..." data-field="url">' +
+    '<input type="text" placeholder="Notiz (optional)" data-field="notiz">';
+  el.appendChild(div);
+}
+
+function deleteDoc(docId, btn) {
+  if (!docId) { btn.closest('.doc-slot').remove(); return; }
+  fetch(SUPABASE_URL + '/rest/v1/rc_projekt_docs?id=eq.' + docId, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  }).then(function() {
+    currentDocs = currentDocs.filter(function(d) { return d.id !== docId; });
+    renderDocs();
+    updateDocsBadge();
+  });
+}
+
+function saveDocs() {
+  if (!currentProjekt) return;
+  var slots = document.querySelectorAll('#docs-list .doc-slot');
+  var promises = [];
+
+  slots.forEach(function(slot) {
+    var typ   = slot.getAttribute('data-typ');
+    var id    = slot.getAttribute('data-id');
+    var titel = (slot.querySelector('[data-field="titel"]').value || '').trim();
+    var url   = (slot.querySelector('[data-field="url"]').value || '').trim();
+    var notiz = (slot.querySelector('[data-field="notiz"]').value || '').trim();
+
+    if (!url) return; // leer = überspringen
+
+    if (id) {
+      // UPDATE
+      promises.push(fetch(SUPABASE_URL + '/rest/v1/rc_projekt_docs?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ titel: titel || typ, url: url, notiz: notiz || null })
+      }));
+    } else {
+      // INSERT
+      promises.push(fetch(SUPABASE_URL + '/rest/v1/rc_projekt_docs', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ projekt_id: currentProjekt.id, typ: typ, titel: titel || typ, url: url, notiz: notiz || null })
+      }));
+    }
+  });
+
+  Promise.all(promises).then(function() {
+    var btn = document.getElementById('btn-doc-save');
+    btn.textContent = '✓ Gespeichert';
+    btn.classList.add('saved');
+    setTimeout(function() { btn.textContent = 'Dokumente speichern'; btn.classList.remove('saved'); }, 2000);
+    loadDocs(currentProjekt.id);
+    updateDocsBadge();
+  });
+}
+
+function updateDocsBadge() {
+  // Projekt-Karte aktualisieren wenn Docs vorhanden
+  fetch(SUPABASE_URL + '/rest/v1/rc_projekt_docs?projekt_id=eq.' + currentProjekt.id + '&select=id', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (currentProjekt) currentProjekt._docCount = data.length;
+  });
 }
 </script>
 </body>
