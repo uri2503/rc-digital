@@ -454,8 +454,8 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
       <h2>Zentrale</h2>
       <p style="margin-top:0.3rem">PIN eingeben um fortzufahren</p>
     </div>
-    <input type="password" class="pin-input" id="pin-input" placeholder="••••••••"
-      maxlength="10" autocomplete="off" inputmode="text">
+    <input type="tel" class="pin-input" id="pin-input" placeholder="____"
+      maxlength="6" autocomplete="off" inputmode="numeric">
     <button class="btn-login" id="btn-login">Einloggen</button>
     <div class="login-error" id="login-error">Falscher PIN. Bitte nochmal versuchen.</div>
   </div>
@@ -609,7 +609,7 @@ document.getElementById('pin-input').addEventListener('keydown', function(e) {
 });
 
 function doLogin() {
-  var val = document.getElementById('pin-input').value.trim().toUpperCase();
+  var val = document.getElementById('pin-input').value.trim();
   if (val === PIN) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
