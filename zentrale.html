@@ -456,7 +456,7 @@ input[type=checkbox].toggle { width: 36px; height: 20px; accent-color: var(--acc
     </div>
     <input type="tel" class="pin-input" id="pin-input" placeholder="____"
       maxlength="6" autocomplete="off" inputmode="numeric">
-    <button class="btn-login" id="btn-login">Einloggen</button>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Einloggen</button>
     <div class="login-error" id="login-error">Falscher PIN. Bitte nochmal versuchen.</div>
   </div>
 </div>
@@ -601,14 +601,14 @@ function brandColor(brand) {
 }
 
 // ── AUTH ──
-document.getElementById('btn-login').addEventListener('click', doLogin);
+// btn-login onclick direkt im HTML
 document.getElementById('pin-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') doLogin();
   document.getElementById('pin-input').classList.remove('error');
   document.getElementById('login-error').style.display = 'none';
 });
 
-function doLogin() {
+window.doLogin = function() {
   var raw = document.getElementById('pin-input').value;
   var val = raw.replace(/\s/g, '');
   if (val === PIN || val === PIN.toLowerCase() || val.toUpperCase() === PIN) {
@@ -623,7 +623,7 @@ function doLogin() {
   }
 }
 
-function logout() {
+window.logout = function() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('pin-input').value = '';
