@@ -7,505 +7,726 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#0d1017;color:#f0f2f8;overflow:hidden;height:100vh;width:100vw}
+body{font-family:'Inter',sans-serif;background:#0d1017;color:#f0f2f8;overflow:hidden;height:100vh;width:100vw;user-select:none}
 
 /* TOOLBAR */
-.toolbar{position:fixed;top:0;left:0;right:0;height:52px;background:#12151fdd;backdrop-filter:blur(12px);border-bottom:1px solid #2d3450;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
-.toolbar-left{display:flex;align-items:center;gap:16px}
-.logo{font-weight:800;font-size:15px;letter-spacing:-.3px}
-.logo span{color:#2563eb}
-.logo em{color:#f59e0b;font-style:normal}
-.legend{display:flex;gap:12px;flex-wrap:wrap}
-.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#8b92b0}
-.leg-dot{width:10px;height:10px;border-radius:50%}
-.toolbar-right{display:flex;gap:8px}
-.tb-btn{background:#1a1f2e;border:1px solid #2d3450;color:#8b92b0;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit}
+.toolbar{position:fixed;top:0;left:0;right:0;height:56px;background:#12151fee;backdrop-filter:blur(16px);border-bottom:1px solid #2d3450;display:flex;align-items:center;gap:10px;padding:0 16px;z-index:200;flex-wrap:nowrap;overflow-x:auto}
+.logo{font-weight:800;font-size:14px;letter-spacing:-.3px;white-space:nowrap;margin-right:6px}
+.logo .b1{color:#2563eb}.logo .b2{color:#c9a84c}.logo .b3{color:#f59e0b}
+.sep{width:1px;height:24px;background:#2d3450;flex-shrink:0}
+.filters{display:flex;gap:5px;align-items:center;flex-wrap:nowrap}
+.f-btn{background:#1a1f2e;border:1px solid #2d3450;color:#8b92b0;padding:4px 10px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit}
+.f-btn:hover{color:#f0f2f8;border-color:#8b92b0}
+.f-btn.active{color:#000;border-color:transparent}
+.tb-right{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.tb-btn{background:#1a1f2e;border:1px solid #2d3450;color:#8b92b0;padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
 .tb-btn:hover{color:#f0f2f8;border-color:#8b92b0}
 
 /* CANVAS */
-#canvas{position:fixed;inset:0;top:52px;cursor:grab}
+#canvas{position:fixed;inset:0;top:56px;cursor:grab;touch-action:none}
 #canvas:active{cursor:grabbing}
 
-/* HINT */
-.hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1f2e99;border:1px solid #2d3450;border-radius:20px;padding:6px 16px;font-size:11px;color:#8b92b0;pointer-events:none}
+/* BREADCRUMB */
+.breadcrumb{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a1f2ecc;backdrop-filter:blur(8px);border:1px solid #2d3450;border-radius:20px;padding:6px 16px;font-size:11px;color:#8b92b0;pointer-events:none;transition:opacity .3s;white-space:nowrap}
 
 /* TOOLTIP */
-.tooltip{position:fixed;background:#1a1f2e;border:1px solid #2d3450;border-radius:10px;padding:12px 16px;max-width:260px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;font-size:12px;line-height:1.6}
-.tooltip.show{opacity:1}
-.tooltip-title{font-weight:700;font-size:13px;margin-bottom:4px}
-.tooltip-repo{font-family:monospace;font-size:11px;color:#8b92b0;margin-bottom:6px}
-.tooltip-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.tooltip-tag{background:#2d3450;color:#8b92b0;padding:2px 8px;border-radius:10px;font-size:10px}
+.tip{position:fixed;background:#1a1f2e;border:1px solid #2d3450;border-radius:10px;padding:12px 16px;max-width:260px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:300;font-size:12px;line-height:1.6;box-shadow:0 8px 32px #00000088}
+.tip.show{opacity:1}
+.tip-title{font-weight:700;font-size:13px;margin-bottom:3px}
+.tip-repo{font-family:monospace;font-size:10px;margin-bottom:6px;opacity:.7}
+.tip-desc{font-size:11px;opacity:.85;margin-bottom:6px;line-height:1.5}
+.tip-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.tip-tag{background:#2d3450;padding:2px 7px;border-radius:8px;font-size:10px;color:#8b92b0}
+.tip-icons{display:flex;gap:6px;margin-top:7px;font-size:11px}
+.tip-hint{font-size:10px;opacity:.5;margin-top:6px;font-style:italic}
+
+/* LOADING */
+.loading{position:fixed;inset:0;top:56px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#0d1017}
+.loading-dot{width:8px;height:8px;background:var(--amber,#f59e0b);border-radius:50%;animation:lpulse 1.2s ease-in-out infinite}
+.loading-dot:nth-child(2){animation-delay:.2s}.loading-dot:nth-child(3){animation-delay:.4s}
+.loading-dots{display:flex;gap:6px}
+@keyframes lpulse{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <div class="toolbar-left">
-    <div class="logo">rc<span>-digital</span> · rc<span>-classic</span> · <em>uri2503</em></div>
-    <div class="legend">
-      <div class="leg-item"><div class="leg-dot" style="background:#2563eb"></div>rc-digital</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#c9a84c"></div>rc-classic-dig</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#1a6b8a"></div>Oldtimer</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#10b981"></div>B2B Piloten</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#8b5cf6"></div>Intern</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#6b7280"></div>Parked</div>
-    </div>
+  <div class="logo">rc<span class="b1">-digital</span> · rc<span class="b2">-classic</span> · <span class="b3">uri2503</span></div>
+  <div class="sep"></div>
+  <div class="filters" id="filterBar">
+    <button class="f-btn active" style="background:#2563eb;color:#fff" onclick="setFilter('all',this)">Alle</button>
   </div>
-  <div class="toolbar-right">
-    <button class="tb-btn" onclick="resetView()">⌖ Reset</button>
-    <button class="tb-btn" onclick="zoomIn()">＋</button>
-    <button class="tb-btn" onclick="zoomOut()">－</button>
+  <div class="tb-right">
+    <button class="tb-btn" onclick="resetView()">⌖</button>
+    <button class="tb-btn" onclick="zoom(1.2)">＋</button>
+    <button class="tb-btn" onclick="zoom(0.8)">－</button>
   </div>
 </div>
 
-<canvas id="canvas"></canvas>
-<div class="hint">Ziehen zum Navigieren · Scrollen zum Zoomen · Hover für Details</div>
-<div class="tooltip" id="tooltip"></div>
+<div class="loading" id="loading">
+  <div class="loading-dots">
+    <div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div>
+  </div>
+  <div style="font-size:12px;color:#8b92b0">Lade Projekte aus Supabase…</div>
+</div>
+
+<canvas id="canvas" style="display:none"></canvas>
+<div class="breadcrumb" id="breadcrumb">Alle Projekte · Scrollen zum Zoomen · Ziehen zum Navigieren</div>
+<div class="tip" id="tip"></div>
 
 <script>
-var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
-var tooltip = document.getElementById('tooltip');
+// ── CONFIG ──
+var SB_URL = 'https://ysqzdqazcgyuzdorauiq.supabase.co';
+var SB_KEY = localStorage.getItem('tp_config') ? (JSON.parse(localStorage.getItem('tp_config')).sbKey || '') : '';
 
-// ── FARBEN PRO BRAND ──
-var COLORS = {
-  'rc-digital':     { bg:'#1e3a8a', border:'#2563eb', text:'#93c5fd', accent:'#2563eb' },
-  'rc-classic-dig': { bg:'#3d2e0a', border:'#c9a84c', text:'#f0d080', accent:'#c9a84c' },
-  'oldtimer':       { bg:'#0c2d38', border:'#1a6b8a', text:'#67c5e8', accent:'#1a6b8a' },
-  'b2b':            { bg:'#064e3b', border:'#10b981', text:'#6ee7b7', accent:'#10b981' },
-  'intern':         { bg:'#2e1065', border:'#8b5cf6', text:'#c4b5fd', accent:'#8b5cf6' },
-  'parked':         { bg:'#1f2937', border:'#6b7280', text:'#9ca3af', accent:'#6b7280' }
+// Fallback: hole Key aus allen bekannten localStorage Slots
+if (!SB_KEY) {
+  var cfg = localStorage.getItem('tp_config');
+  if (cfg) { try { SB_KEY = JSON.parse(cfg).sbKey || ''; } catch(e){} }
+}
+
+// ── BRAND → HUB MAPPING ──
+var BRAND_HUB = {
+  'rc-digital': 'rc-digital',
+  'rc': 'rc-classic-dig',
+  'rc oldtimer doku': 'rc-classic-dig',
+  'rc-überwachung tool\'s': 'intern',
+  'intern': 'intern',
+  'eiswerk': 'oldtimer',
+  'gtue': 'b2b-gtue',
+  'baudesk': 'b2b-bau',
+  'backki': 'rc-digital',
+  'autoai': 'rc-digital',
+  'betriebspass': 'rc-digital',
+  'crashguide': 'rc-digital',
+  'baeckerei': 'rc-digital',
+  'auto guide ai': 'rc-digital'
 };
 
-// ── NODES ──
-// cx, cy = relative zu Center in Pixeln (wird später positioniert)
-var CENTER = { label:'URI RIEDEL\nPortfolio', type:'center' };
-
+// ── HUBS ──
 var HUBS = [
-  { id:'rcdigital',   label:'rc-digital', sublabel:'B2C / B2B SaaS', type:'hub', color:'rc-digital',     angle:0 },
-  { id:'rcclassicdig',label:'rc-classic-dig', sublabel:'Oldtimer Digital', type:'hub', color:'rc-classic-dig', angle:72 },
-  { id:'oldtimer',    label:'Oldtimer\nEiswerk', sublabel:'Dry-Ice Service', type:'hub', color:'oldtimer',    angle:144 },
-  { id:'b2b',         label:'B2B Piloten', sublabel:'Partnerprojekte', type:'hub', color:'b2b',             angle:216 },
-  { id:'intern',      label:'Intern &\nInfrastruktur', sublabel:'Tools & Zentrale', type:'hub', color:'intern',     angle:288 },
+  { id:'rc-digital',   label:'rc-digital',       sublabel:'B2C / B2B SaaS',      color:'#2563eb', bg:'#0f1e40', angle:0,   r:44 },
+  { id:'rc-classic-dig',label:'rc-classic',      sublabel:'Oldtimer Digital',     color:'#c9a84c', bg:'#251c05', angle:60,  r:40 },
+  { id:'oldtimer',     label:'Eiswerk',           sublabel:'Dry-Ice Service',      color:'#1a6b8a', bg:'#051820', angle:120, r:38 },
+  { id:'b2b-gtue',     label:'GTÜ',              sublabel:'B2B Pilot',            color:'#e3001b', bg:'#280005', angle:180, r:36 },
+  { id:'b2b-bau',      label:'BauDesk',           sublabel:'B2B Pilot',            color:'#10b981', bg:'#041f14', angle:240, r:36 },
+  { id:'intern',       label:'Intern &\nInfra',   sublabel:'Tools & Zentrale',     color:'#8b5cf6', bg:'#160d2e', angle:300, r:40 },
 ];
 
-var NODES = [
-  // rc-digital
-  { hub:'rcdigital', label:'BackKI', repo:'backki-*', sublabel:'Bäckerei Warenverlust\nKI-Analytics · 29€/Report', tags:['Stripe live','Supabase','Claude API','Funnel 1 live'] },
-  { hub:'rcdigital', label:'CrashGuide', repo:'crashguide-*', sublabel:'KFZ Schadenbewertung\nFunnel A (3,99€) + B (4,99€)', tags:['Stripe','2 Funnels','Mein-Auto-Assistent Hub'] },
-  { hub:'rcdigital', label:'TeilePilot', repo:'teilepilot', sublabel:'Kleinanzeigen KI-Autopilot\nInserate + Antworten · Credits', tags:['NEU','Credits System','Stripe','Supabase'] },
-  { hub:'rcdigital', label:'AutoAI Tools', repo:'AutoAITools-*', sublabel:'KFZ-Händler SaaS\nBewertung · Inserate · Archiv', tags:['Händler B2B','Supabase','mobile.de'] },
-  { hub:'rcdigital', label:'Betriebspass', repo:'betriebspass', sublabel:'Business Continuity\n39€ one-time + Addons', tags:['Stripe','Testament','Digitaler Wächter'] },
-  { hub:'rcdigital', label:'Mein-Auto-\nAssistent', repo:'mein-auto-assistent.de', sublabel:'Hub: CrashGuide + AutoAI\n+ HU-Vorab-Check', tags:['Domain gesichert','Hub Konzept'] },
+// ── STATUS CONFIG ──
+var STATUS = {
+  'live':   { label:'LIVE',  color:'#10b981', bg:'#052010' },
+  'wip':    { label:'WIP',   color:'#f59e0b', bg:'#1f1200' },
+  'pause':  { label:'PAUSE', color:'#6b7280', bg:'#111318' },
+  'intern': { label:'INTERN',color:'#8b5cf6', bg:'#0d0820' },
+};
 
-  // rc-classic-dig
-  { hub:'rcclassicdig', label:'RC Klassiker\nWertdossier', repo:'rc-classic-dig-wertdossier', sublabel:'Oldtimer Bewertung\nFreemium → One-Time', tags:['Live','Web Search','Lead Gate','Stripe'] },
-  { hub:'rcclassicdig', label:'RC Restaurations\nDoku', repo:'rc-classic-dig-doku', sublabel:'Restaurations-Dokumentation\nKunden-Portal 30-Tage-Code', tags:['Live','Foto-Upload','CI konvertierung offen'] },
-  { hub:'rcclassicdig', label:'RC Foto-Triage', repo:'foto_triage', sublabel:'KI Foto-Selektion\nBatch-Pipeline', tags:['Claude API','JSZip','Supabase Storage'] },
-  { hub:'rcclassicdig', label:'Tools Hub', repo:'rc-classic-dig-tools-hub', sublabel:'Bundle Landing\nFreemium-to-Purchase', tags:['Live','Hub alle Oldtimer Tools'] },
+// ── STATE ──
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var W, H, cx, cy;
+var scale = 1, offX = 0, offY = 0;
+var isDrag = false, dragS = {};
+var activeFilter = 'all';
+var focusHub = null; // zoomed hub id
+var allProjects = [];
+var positions = {}; // label → {x,y,project,hub}
+var hubPos = {};
+var hoveredKey = null;
+var lastPinchDist = null;
 
-  // Oldtimer Eiswerk
-  { hub:'oldtimer', label:'Eiswerk\nCheck', repo:'oldtimer-eiswerk', sublabel:'Eisstrahl-Check v4\nFahrzeug DB · KI Analyse · WhatsApp CTA', tags:['R107','W123','S124','Lead Capture'] },
-  { hub:'oldtimer', label:'Eiswerk\nWertetabelle', repo:'oldtimer-eiswerk', sublabel:'Import Tool\nOldtimer Markt → Supabase', tags:['KI Extraktion','3 Baureihen','58 Modelle'] },
+var HUB_R = 190; // radius of hub ring
+var NODE_R = 370; // radius of node ring (from center)
+var NODE_R_FOCUSED = 180; // when focused
 
-  // B2B Piloten
-  { hub:'b2b', label:'GTÜ HU-\nVorab-Check', repo:'gtue-hu-vorab-check / auto_check_hu', sublabel:'Pilot: Steffen Höhn GTÜ\n49€/Monat Station-Lizenz', tags:['10k Postalkampagne','P1 offen: WhatsApp Nr.','DSGVO vor Go-Live'] },
-  { hub:'b2b', label:'BauDesk', repo:'baudesk', sublabel:'Pilot: MUSA Elektrotechnik\n~90 MA · Stempeluhr · Rapporte', tags:['59-189€/Monat','Setup 1.500€','Rechnungen'] },
-  { hub:'b2b', label:'SmartGate', repo:'smartgate-app', sublabel:'Zugang · Zeiterfassung · Kamera\nKonzept parked', tags:['smart-gate-app.de','parked'] },
+// ── LOAD DATA ──
+function loadData() {
+  var headers = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+  
+  // If no key, use hardcoded fallback data
+  if (!SB_KEY) {
+    useFallbackData();
+    return;
+  }
 
-  // Intern
-  { hub:'intern', label:'rc-digital\nZentrale', repo:'zentrale.html', sublabel:'Command Center\n~38 Repos · GitHub Sync', tags:['PIN 2503','rc_projekte','Supabase','Docs'] },
-  { hub:'intern', label:'rc-digital.de', repo:'uri2503.github.io', sublabel:'Portfolio Landing\nMidnight Blue CI', tags:['index','impressum','datenschutz'] },
-  { hub:'intern', label:'Lingua\nTrainer', repo:'Lingua_trainer', sublabel:'EN/ES C1-C2\nPhrasen · AI Conv · Übungen', tags:['Personal','Claude API'] },
-  { hub:'intern', label:'Mein Schatz', repo:'mein-schatz', sublabel:'Digitales Inventar\nZimmer → Möbel → Item', tags:['Personal','98 Kategorien','Pink/Neon CI'] },
-  { hub:'intern', label:'RC Dev\nDashboard', repo:'intern', sublabel:'Projekt-Management\nBrand-coded Cards', tags:['rc_projekt_docs','Filter','GitHub Pages'] },
-];
+  fetch(SB_URL + '/rest/v1/rc_projekte?select=name,repo,brand,status,live_url,hat_supabase,hat_stripe,tags,beschreibung&order=sort_order', {
+    headers: headers
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!Array.isArray(data) || data.length === 0) { useFallbackData(); return; }
+    allProjects = data;
+    init();
+  })
+  .catch(function() { useFallbackData(); });
+}
+
+function useFallbackData() {
+  // Fallback: hardcoded aus Supabase-Abfrage
+  allProjects = [
+    {name:'BackKI App',repo:'backki-app',brand:'backki',status:'live',live_url:'https://uri2503.github.io/backki-app',hat_supabase:true,hat_stripe:true,tags:['Claude AI','Supabase','Stripe'],beschreibung:'Bäckerei Warenverlust KI-Analytics'},
+    {name:'BackKI Landing',repo:'backki-landing',brand:'backki',status:'live',live_url:null,hat_supabase:false,hat_stripe:false,tags:null,beschreibung:''},
+    {name:'CrashGuide',repo:'auto_guide_crash',brand:'crashguide',status:'wip',live_url:'https://uri2503.github.io/auto_guide_crash',hat_supabase:false,hat_stripe:true,tags:['Claude AI','Stripe'],beschreibung:'KFZ Schadenbewertung'},
+    {name:'TeilePilot',repo:'teilepilot',brand:'rc-digital',status:'wip',live_url:null,hat_supabase:true,hat_stripe:true,tags:['NEU','Credits','Claude AI'],beschreibung:'Kleinanzeigen KI-Autopilot'},
+    {name:'AutoAI Tools',repo:'AutoAITools-',brand:'autoai',status:'wip',live_url:'https://uri2503.github.io/AutoAITools-',hat_supabase:true,hat_stripe:true,tags:['Claude AI','Händler'],beschreibung:''},
+    {name:'Betriebspass App',repo:'betriebspass',brand:'betriebspass',status:'wip',live_url:'https://betriebspass.de',hat_supabase:true,hat_stripe:true,tags:['Stripe','Testament'],beschreibung:'Business Continuity'},
+    {name:'AutoGuide AI',repo:'autoguide-ai',brand:'auto guide ai',status:'wip',live_url:'https://uri2503.github.io/autoguide-ai',hat_supabase:false,hat_stripe:false,tags:['Claude AI'],beschreibung:''},
+    {name:'Bäckerei Bedarfsplaner',repo:'baeckerei-bedarfsplaner',brand:'baeckerei',status:'wip',live_url:'https://uri2503.github.io/baeckerei-bedarfsplaner',hat_supabase:false,hat_stripe:false,tags:['SaaS'],beschreibung:''},
+    {name:'RC Wertdossier',repo:'rc_klassiker',brand:'rc',status:'pause',live_url:'https://uri2503.github.io/rc_klassiker',hat_supabase:true,hat_stripe:true,tags:['Claude AI','Stripe'],beschreibung:'Oldtimer Bewertung'},
+    {name:'RC Doku App',repo:'Riedel_Classic_Doku',brand:'rc oldtimer doku',status:'live',live_url:'https://uri2503.github.io/Riedel_Classic_Doku',hat_supabase:true,hat_stripe:false,tags:['Supabase','Fotos'],beschreibung:'Restaurations-Dokumentation'},
+    {name:'RC Foto-Triage',repo:'foto_triage',brand:'rc oldtimer doku',status:'wip',live_url:'https://uri2503.github.io/foto_triage',hat_supabase:true,hat_stripe:false,tags:['Claude AI','JSZip'],beschreibung:'KI Foto-Selektion'},
+    {name:'RC Marktplatz',repo:'Riedel-Oldtimer-marktplatz',brand:'rc',status:'pause',live_url:'https://uri2503.github.io/Riedel-Oldtimer-marktplatz',hat_supabase:false,hat_stripe:false,tags:['Ersatzteile'],beschreibung:''},
+    {name:'RC Steuerung',repo:'RC-Restore',brand:'rc',status:'intern',live_url:'https://uri2503.github.io/RC-Restore',hat_supabase:false,hat_stripe:false,tags:['Werkstatt'],beschreibung:''},
+    {name:'Unfallkalkulation',repo:'RC_Unfallkalkulation',brand:'rc',status:'live',live_url:'https://uri2503.github.io/RC_Unfallkalkulation',hat_supabase:false,hat_stripe:false,tags:['Kalkulation'],beschreibung:''},
+    {name:'Eiswerk Check',repo:'oldtimer-eiswerk',brand:'eiswerk',status:'live',live_url:'https://uri2503.github.io/oldtimer-eiswerk',hat_supabase:true,hat_stripe:false,tags:['Claude AI','WhatsApp'],beschreibung:'Eisstrahl-Check v4'},
+    {name:'Eiswerk Admin',repo:'eiswerk_dashboard',brand:'eiswerk',status:'live',live_url:'https://uri2503.github.io/eiswerk_dashboard',hat_supabase:true,hat_stripe:false,tags:['Admin','Termine'],beschreibung:''},
+    {name:'GTÜ Landing',repo:'gtue-hu-vorab-check',brand:'gtue',status:'live',live_url:'https://uri2503.github.io/gtue-hu-vorab-check',hat_supabase:true,hat_stripe:false,tags:['Lead Gen'],beschreibung:''},
+    {name:'GTÜ HU-Check Tool',repo:'auto_check_hu',brand:'gtue',status:'live',live_url:'https://uri2503.github.io/auto_check_hu',hat_supabase:true,hat_stripe:false,tags:['Claude AI','WhatsApp'],beschreibung:''},
+    {name:'GTÜ Partner Dashboard',repo:'gtue-hu-dashboard',brand:'gtue',status:'live',live_url:'https://uri2503.github.io/gtue-hu-dashboard',hat_supabase:true,hat_stripe:false,tags:['hu_leads'],beschreibung:''},
+    {name:'GTÜ Rollout Dashboard',repo:'gtue-rollout-dashboard',brand:'gtue',status:'wip',live_url:'https://uri2503.github.io/gtue-rollout-dashboard',hat_supabase:false,hat_stripe:false,tags:['Rollout'],beschreibung:''},
+    {name:'BauDesk App',repo:'musa-baudesk',brand:'baudesk',status:'live',live_url:'https://uri2503.github.io/musa-baudesk',hat_supabase:true,hat_stripe:false,tags:['Supabase','90 MA'],beschreibung:''},
+    {name:'BauDesk Landing',repo:'baudesk',brand:'baudesk',status:'wip',live_url:'https://uri2503.github.io/baudesk',hat_supabase:false,hat_stripe:false,tags:['Marketing'],beschreibung:''},
+    {name:'RC Dev Dashboard',repo:'RC-dashboard',brand:'rc-überwachung tool\'s',status:'intern',live_url:'https://uri2503.github.io/RC-dashboard',hat_supabase:true,hat_stripe:false,tags:['Projekt-Mgmt'],beschreibung:''},
+    {name:'RC Kommandozentrale',repo:'rc-kommandozentrale',brand:'rc-überwachung tool\'s',status:'intern',live_url:null,hat_supabase:true,hat_stripe:false,tags:null,beschreibung:''},
+    {name:'rc-digital Website',repo:'rc-digital',brand:'rc-überwachung tool\'s',status:'live',live_url:null,hat_supabase:false,hat_stripe:false,tags:null,beschreibung:''},
+    {name:'RC Forecast',repo:'rc-forecast',brand:'rc',status:'intern',live_url:'https://uri2503.github.io/rc-forecast',hat_supabase:false,hat_stripe:false,tags:['Revenue','Charts'],beschreibung:'Umsatzrechner alle RC Tools'},
+    {name:'Lingua Trainer',repo:'Lingua_trainer',brand:'intern',status:'live',live_url:'https://uri2503.github.io/Lingua_trainer',hat_supabase:false,hat_stripe:false,tags:['Claude AI','Sprachen'],beschreibung:''},
+    {name:'Mein Schatz',repo:'mein-schatz',brand:'intern',status:'live',live_url:'https://uri2503.github.io/mein-schatz',hat_supabase:false,hat_stripe:false,tags:['Inventar'],beschreibung:''},
+    {name:'SmartGate App',repo:'smartgate-App',brand:'intern',status:'pause',live_url:null,hat_supabase:false,hat_stripe:false,tags:null,beschreibung:''},
+  ];
+  init();
+}
+
+// ── INIT ──
+function init() {
+  buildFilterBar();
+  document.getElementById('loading').style.display = 'none';
+  canvas.style.display = 'block';
+  resize();
+}
+
+function getHubId(brand) {
+  return BRAND_HUB[brand] || 'intern';
+}
+
+function getHubForId(id) {
+  for (var i=0;i<HUBS.length;i++) if (HUBS[i].id===id) return HUBS[i];
+  return null;
+}
+
+// ── FILTER BAR ──
+function buildFilterBar() {
+  var bar = document.getElementById('filterBar');
+  // Status filters
+  var statuses = ['live','wip','pause','intern'];
+  var labels = {live:'✓ Live', wip:'⚡ WIP', pause:'⏸ Pause', intern:'🔒 Intern'};
+  var colors = {live:'#10b981',wip:'#f59e0b',pause:'#6b7280',intern:'#8b5cf6'};
+  statuses.forEach(function(s) {
+    var b = document.createElement('button');
+    b.className = 'f-btn';
+    b.textContent = labels[s];
+    b.setAttribute('data-filter', s);
+    b.onclick = function() { setFilter(s, b); };
+    b.style.setProperty('--c', colors[s]);
+    bar.appendChild(b);
+  });
+}
+
+function setFilter(val, btn) {
+  activeFilter = val;
+  var btns = document.querySelectorAll('.f-btn');
+  btns.forEach(function(b) {
+    b.classList.remove('active');
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+  btn.classList.add('active');
+  if (val === 'all') {
+    btn.style.background = '#2563eb';
+    btn.style.color = '#fff';
+  } else {
+    var colors = {live:'#10b981',wip:'#f59e0b',pause:'#6b7280',intern:'#8b5cf6'};
+    btn.style.background = colors[val] || '#2563eb';
+    btn.style.color = '#fff';
+  }
+  focusHub = null;
+  computePositions();
+  draw();
+  updateBreadcrumb();
+}
+
+// ── VISIBLE PROJECTS ──
+function visibleProjects() {
+  return allProjects.filter(function(p) {
+    if (activeFilter !== 'all' && p.status !== activeFilter) return false;
+    if (focusHub && getHubId(p.brand) !== focusHub) return false;
+    return true;
+  });
+}
+
+function visibleHubs() {
+  if (focusHub) return HUBS.filter(function(h){return h.id===focusHub;});
+  var usedHubs = {};
+  visibleProjects().forEach(function(p){ usedHubs[getHubId(p.brand)] = true; });
+  return HUBS.filter(function(h){ return usedHubs[h.id]; });
+}
 
 // ── LAYOUT ──
-var W, H, cx, cy;
-var scale = 1;
-var offsetX = 0, offsetY = 0;
-var isDragging = false;
-var dragStart = { x:0, y:0 };
-var hubPositions = {};
-var nodePositions = {};
+function computePositions() {
+  positions = {};
+  hubPos = {};
 
-var HUB_RADIUS = 200;
-var NODE_RADIUS = 340;
+  var vhubs = visibleHubs();
+  var vprojects = visibleProjects();
 
+  if (focusHub) {
+    // Single hub in center
+    var hub = getHubForId(focusHub);
+    hubPos[focusHub] = {x:0, y:0};
+    var nodes = vprojects;
+    var n = nodes.length;
+    nodes.forEach(function(p, i) {
+      var angle = (i / n) * 2 * Math.PI - Math.PI/2;
+      var r = Math.max(150, 60 + n * 18);
+      var key = p.name;
+      positions[key] = {
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
+        project: p, hub: hub
+      };
+    });
+  } else {
+    // All hubs arranged in circle
+    var n = vhubs.length;
+    vhubs.forEach(function(h, hi) {
+      var angle = (hi / n) * 2 * Math.PI - Math.PI/2;
+      hubPos[h.id] = {
+        x: Math.cos(angle) * HUB_R,
+        y: Math.sin(angle) * HUB_R
+      };
+    });
+
+    // Nodes per hub
+    var hubNodes = {};
+    vprojects.forEach(function(p) {
+      var hid = getHubId(p.brand);
+      if (!hubNodes[hid]) hubNodes[hid] = [];
+      hubNodes[hid].push(p);
+    });
+
+    Object.keys(hubNodes).forEach(function(hid) {
+      var hp = hubPos[hid];
+      if (!hp) return;
+      var hub = getHubForId(hid);
+      var nodes = hubNodes[hid];
+      var cnt = nodes.length;
+      // angle from center to hub
+      var hubAngle = Math.atan2(hp.y, hp.x);
+      // spread nodes around that direction
+      var spread = Math.min(Math.PI * 0.55, (Math.PI * 0.55) / Math.max(1, cnt / 4));
+      nodes.forEach(function(p, ni) {
+        var t = cnt === 1 ? 0 : (ni / (cnt-1) - 0.5);
+        var angle = hubAngle + t * spread * 2;
+        var dist = NODE_R + (ni % 2) * 28; // stagger
+        var key = p.name;
+        positions[key] = {
+          x: Math.cos(angle) * dist,
+          y: Math.sin(angle) * dist,
+          project: p, hub: hub
+        };
+      });
+    });
+  }
+}
+
+// ── CANVAS ──
 function resize() {
   W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight - 52;
-  cx = W / 2;
-  cy = H / 2;
+  H = canvas.height = window.innerHeight - 56;
+  cx = W/2; cy = H/2;
   computePositions();
   draw();
 }
 
-function computePositions() {
-  // Hub positions (pentagon)
-  HUBS.forEach(function(h) {
-    var rad = (h.angle - 90) * Math.PI / 180;
-    hubPositions[h.id] = {
-      x: Math.cos(rad) * HUB_RADIUS,
-      y: Math.sin(rad) * HUB_RADIUS
-    };
-  });
+function toScreen(wx, wy) {
+  return { x:(wx+offX)*scale+cx, y:(wy+offY)*scale+cy };
+}
 
-  // Node positions: distribute around each hub
-  var hubNodes = {};
-  NODES.forEach(function(n) {
-    if (!hubNodes[n.hub]) hubNodes[n.hub] = [];
-    hubNodes[n.hub].push(n);
-  });
-
-  Object.keys(hubNodes).forEach(function(hubId) {
-    var hub = HUBS.filter(function(h){return h.id===hubId})[0];
-    var nodes = hubNodes[hubId];
-    var hubAngleDeg = hub.angle;
-    var spread = Math.min(70, 140 / nodes.length * 1.2);
-    var startAngle = hubAngleDeg - (spread * (nodes.length - 1)) / 2;
-
-    nodes.forEach(function(n, i) {
-      var deg = startAngle + i * spread;
-      var rad = (deg - 90) * Math.PI / 180;
-      nodePositions[n.label] = {
-        x: Math.cos(rad) * NODE_RADIUS,
-        y: Math.sin(rad) * NODE_RADIUS,
-        node: n
-      };
-    });
-  });
+function toWorld(sx, sy) {
+  return { x:(sx-cx)/scale - offX, y:(sy-cy)/scale - offY };
 }
 
 // ── DRAW ──
-function toScreen(wx, wy) {
-  return {
-    x: (wx + offsetX) * scale + cx,
-    y: (wy + offsetY) * scale + cy
-  };
-}
-
 function draw() {
-  ctx.clearRect(0, 0, W, H);
+  ctx.clearRect(0,0,W,H);
 
-  // Background grid dots
-  ctx.fillStyle = '#1a1f2e22';
-  var gridSpacing = 40 * scale;
-  var startX = ((offsetX * scale + cx) % gridSpacing + gridSpacing) % gridSpacing;
-  var startY = ((offsetY * scale + cy) % gridSpacing + gridSpacing) % gridSpacing;
-  for (var gx = startX; gx < W; gx += gridSpacing) {
-    for (var gy = startY; gy < H; gy += gridSpacing) {
-      ctx.beginPath();
-      ctx.arc(gx, gy, 1, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  // Grid
+  ctx.fillStyle = '#1a1f2e18';
+  var gs = 44*scale;
+  var gx0 = ((offX*scale+cx)%gs+gs)%gs;
+  var gy0 = ((offY*scale+cy)%gs+gs)%gs;
+  for (var gx=gx0;gx<W;gx+=gs) for (var gy=gy0;gy<H;gy+=gs) {
+    ctx.beginPath(); ctx.arc(gx,gy,1,0,Math.PI*2); ctx.fill();
   }
 
-  // Draw connections: hub → nodes
-  NODES.forEach(function(n) {
-    var hp = hubPositions[n.hub];
-    var np = nodePositions[n.label];
-    if (!hp || !np) return;
-    var hub = HUBS.filter(function(h){return h.id===n.hub})[0];
-    var col = COLORS[hub.color];
-    var s1 = toScreen(hp.x, hp.y);
-    var s2 = toScreen(np.x, np.y);
-    ctx.beginPath();
-    ctx.moveTo(s1.x, s1.y);
-    ctx.lineTo(s2.x, s2.y);
-    ctx.strokeStyle = col.accent + '44';
-    ctx.lineWidth = 1.5 * scale;
+  if (!focusHub) {
+    // Center node
+    drawCenter();
+    // Center→Hub lines
+    HUBS.forEach(function(h) {
+      var hp = hubPos[h.id];
+      if (!hp) return;
+      var s1 = toScreen(0,0), s2 = toScreen(hp.x,hp.y);
+      ctx.beginPath(); ctx.moveTo(s1.x,s1.y); ctx.lineTo(s2.x,s2.y);
+      ctx.strokeStyle = h.color+'44'; ctx.lineWidth=2*scale; ctx.stroke();
+    });
+  }
+
+  // Hub→Node lines
+  Object.keys(positions).forEach(function(key) {
+    var pos = positions[key];
+    var hub = pos.hub;
+    if (!hub) return;
+    var hp = focusHub ? {x:0,y:0} : hubPos[hub.id];
+    if (!hp) return;
+    var s1 = toScreen(hp.x,hp.y), s2 = toScreen(pos.x,pos.y);
+    var isHov = hoveredKey === key;
+    ctx.beginPath(); ctx.moveTo(s1.x,s1.y); ctx.lineTo(s2.x,s2.y);
+    ctx.strokeStyle = isHov ? hub.color+'99' : hub.color+'2a';
+    ctx.lineWidth = (isHov ? 2 : 1.2) * scale;
     ctx.stroke();
   });
-
-  // Draw connections: center → hubs
-  HUBS.forEach(function(h) {
-    var hp = hubPositions[h.id];
-    var col = COLORS[h.color];
-    var s1 = toScreen(0, 0);
-    var s2 = toScreen(hp.x, hp.y);
-    ctx.beginPath();
-    ctx.moveTo(s1.x, s1.y);
-    ctx.lineTo(s2.x, s2.y);
-    ctx.strokeStyle = col.accent + '66';
-    ctx.lineWidth = 2 * scale;
-    ctx.stroke();
-  });
-
-  // Draw center
-  drawCenter();
 
   // Draw hubs
-  HUBS.forEach(function(h) { drawHub(h); });
+  visibleHubs().forEach(function(h) {
+    drawHub(h);
+  });
 
   // Draw nodes
-  NODES.forEach(function(n) { drawNode(n); });
+  Object.keys(positions).forEach(function(key) {
+    drawNode(key, positions[key]);
+  });
 }
 
 function drawCenter() {
-  var s = toScreen(0, 0);
-  var r = 56 * scale;
+  var s = toScreen(0,0);
+  var r = 50*scale;
   // Glow
-  var g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 1.5);
-  g.addColorStop(0, '#2563eb33');
-  g.addColorStop(1, 'transparent');
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(s.x, s.y, r * 1.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-  ctx.fillStyle = '#12151f';
-  ctx.fill();
-  ctx.strokeStyle = '#2563eb';
-  ctx.lineWidth = 2.5 * scale;
-  ctx.stroke();
-
-  ctx.fillStyle = '#f0f2f8';
-  ctx.font = 'bold ' + (13 * scale) + 'px Inter';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('URI RIEDEL', s.x, s.y - 9 * scale);
-  ctx.font = (10 * scale) + 'px Inter';
-  ctx.fillStyle = '#8b92b0';
-  ctx.fillText('Portfolio', s.x, s.y + 9 * scale);
+  var g = ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,r*2);
+  g.addColorStop(0,'#2563eb28'); g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,r*2,0,Math.PI*2); ctx.fill();
+  // Circle
+  ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2);
+  ctx.fillStyle='#0d1017'; ctx.fill();
+  ctx.strokeStyle='#2563eb'; ctx.lineWidth=2.5*scale; ctx.stroke();
+  // Text
+  ctx.fillStyle='#f0f2f8'; ctx.font='bold '+(12*scale)+'px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('URI RIEDEL',s.x,s.y-7*scale);
+  ctx.fillStyle='#8b92b0'; ctx.font=(9*scale)+'px Inter';
+  ctx.fillText('Portfolio · '+allProjects.length+' Projekte',s.x,s.y+8*scale);
 }
 
 function drawHub(h) {
-  var hp = hubPositions[h.id];
-  var s = toScreen(hp.x, hp.y);
-  var col = COLORS[h.color];
-  var r = 40 * scale;
+  var hp = focusHub ? {x:0,y:0} : hubPos[h.id];
+  if (!hp) return;
+  var s = toScreen(hp.x,hp.y);
+  var r = (focusHub ? 52 : h.r) * scale;
+  var isClickable = !focusHub;
 
   // Glow
-  var g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 1.8);
-  g.addColorStop(0, col.accent + '22');
-  g.addColorStop(1, 'transparent');
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(s.x, s.y, r * 1.8, 0, Math.PI * 2);
-  ctx.fill();
+  var g = ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,r*2.2);
+  g.addColorStop(0,h.color+'20'); g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,r*2.2,0,Math.PI*2); ctx.fill();
 
-  // Circle
-  ctx.beginPath();
-  ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-  ctx.fillStyle = col.bg;
-  ctx.fill();
-  ctx.strokeStyle = col.border;
-  ctx.lineWidth = 2 * scale;
-  ctx.stroke();
+  ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2);
+  ctx.fillStyle=h.bg; ctx.fill();
+  ctx.strokeStyle=h.color; ctx.lineWidth=(focusHub?3:2)*scale; ctx.stroke();
 
-  // Label
   var lines = h.label.split('\n');
-  ctx.fillStyle = col.text;
-  ctx.font = 'bold ' + (11 * scale) + 'px Inter';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  var lineH = 14 * scale;
-  var totalH = lines.length * lineH;
-  lines.forEach(function(line, i) {
-    ctx.fillText(line, s.x, s.y - totalH/2 + lineH * i + lineH/2 - (lines.length > 1 ? 3 * scale : 0));
+  ctx.fillStyle=h.color; ctx.font='bold '+(11*scale)+'px Inter';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  var lh=13*scale;
+  lines.forEach(function(line,i){
+    ctx.fillText(line, s.x, s.y+(i-(lines.length-1)/2)*lh);
   });
-
-  // Sublabel
-  ctx.fillStyle = col.accent + 'aa';
-  ctx.font = (8.5 * scale) + 'px Inter';
-  ctx.fillText(h.sublabel, s.x, s.y + r + 12 * scale);
+  if (scale>0.65) {
+    ctx.fillStyle=h.color+'88'; ctx.font=(8*scale)+'px Inter';
+    ctx.fillText(h.sublabel,s.x,s.y+r+11*scale);
+  }
+  if (isClickable && scale>0.55) {
+    ctx.fillStyle='#ffffff28'; ctx.font=(7.5*scale)+'px Inter';
+    ctx.fillText('↗ Klick zum Einzoomen',s.x,s.y+r+22*scale);
+  }
 }
 
-function drawNode(n) {
-  var np = nodePositions[n.label];
-  if (!np) return;
-  var s = toScreen(np.x, np.y);
-  var hub = HUBS.filter(function(h){return h.id===n.hub})[0];
-  var col = COLORS[hub.color];
+function drawNode(key, pos) {
+  var p = pos.project;
+  var hub = pos.hub;
+  if (!hub) return;
+  var s = toScreen(pos.x,pos.y);
+  var isHov = hoveredKey===key;
+  var st = STATUS[p.status] || STATUS['intern'];
 
-  var pw = 110 * scale;
-  var ph = 52 * scale;
-  var rx = 8 * scale;
+  var pw = (isHov?120:112)*scale;
+  var ph = (isHov?50:44)*scale;
+  var rx = 8*scale;
 
-  // Shadow/glow
-  ctx.shadowColor = col.accent + '44';
-  ctx.shadowBlur = 12 * scale;
+  // Shadow
+  if (isHov) { ctx.shadowColor=hub.color+'66'; ctx.shadowBlur=18*scale; }
 
-  // Pill
-  ctx.beginPath();
-  ctx.roundRect(s.x - pw/2, s.y - ph/2, pw, ph, rx);
-  ctx.fillStyle = col.bg;
+  // Card
+  ctx.beginPath(); roundRect(ctx,s.x-pw/2,s.y-ph/2,pw,ph,rx);
+  ctx.fillStyle = isHov ? hub.bg : '#0d1017ee';
   ctx.fill();
-  ctx.strokeStyle = col.border;
-  ctx.lineWidth = 1.5 * scale;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  ctx.strokeStyle = isHov ? hub.color : hub.color+'55';
+  ctx.lineWidth=(isHov?2:1.2)*scale; ctx.stroke();
+  ctx.shadowBlur=0;
 
-  // Label
-  var lines = n.label.split('\n');
-  ctx.fillStyle = col.text;
-  ctx.font = 'bold ' + (10 * scale) + 'px Inter';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  var lineH = 13 * scale;
-  lines.forEach(function(line, i) {
-    var yOff = lines.length === 1 ? 0 : (i - 0.5) * lineH;
-    ctx.fillText(line, s.x, s.y + yOff - 5 * scale);
-  });
+  // Status bar on left
+  var bw=3*scale;
+  ctx.beginPath(); roundRect(ctx,s.x-pw/2,s.y-ph/2+rx/2,bw,ph-rx,2*scale);
+  ctx.fillStyle=st.color; ctx.fill();
 
-  // Repo tag
-  if (n.repo && scale > 0.6) {
-    ctx.fillStyle = col.accent + '88';
-    ctx.font = (7.5 * scale) + 'px Inter';
-    var repo = n.repo.length > 22 ? n.repo.substr(0,20) + '…' : n.repo;
-    ctx.fillText(repo, s.x, s.y + ph/2 - 8 * scale);
+  // Name
+  ctx.fillStyle = isHov ? '#fff' : hub.color+'cc';
+  ctx.font='bold '+(9.5*scale)+'px Inter';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  var name = p.name.length>20 ? p.name.substr(0,18)+'…' : p.name;
+  ctx.fillText(name, s.x+bw/2, s.y - 8*scale);
+
+  // Repo
+  if (scale>0.55) {
+    ctx.fillStyle='#8b92b0'; ctx.font=(7.5*scale)+'px Inter';
+    var repo = p.repo ? (p.repo.length>22 ? p.repo.substr(0,20)+'…' : p.repo) : '';
+    ctx.fillText(repo, s.x+bw/2, s.y+8*scale);
   }
+
+  // Icons
+  if (scale>0.6) {
+    var icons='';
+    if (p.hat_supabase) icons+='🗄';
+    if (p.hat_stripe) icons+='💳';
+    if (p.tags && p.tags.indexOf('Claude AI')>=0) icons+='🤖';
+    if (icons) {
+      ctx.font=(9*scale)+'px Inter'; ctx.textAlign='right';
+      ctx.fillText(icons, s.x+pw/2-5*scale, s.y-ph/2+10*scale);
+    }
+  }
+
+  // Status badge
+  ctx.fillStyle=st.color; ctx.font='bold '+(7*scale)+'px Inter';
+  ctx.textAlign='left';
+  ctx.fillText(st.label, s.x-pw/2+7*scale, s.y+ph/2-7*scale);
 
   // NEU badge
-  if (n.tags && n.tags.indexOf('NEU') >= 0) {
-    var bw = 28 * scale;
-    var bh = 14 * scale;
-    ctx.fillStyle = '#f59e0b';
-    ctx.beginPath();
-    ctx.roundRect(s.x + pw/2 - bw - 4*scale, s.y - ph/2 + 4*scale, bw, bh, 4*scale);
-    ctx.fill();
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold ' + (8 * scale) + 'px Inter';
-    ctx.fillText('NEU', s.x + pw/2 - bw/2 - 4*scale, s.y - ph/2 + 4*scale + bh/2);
+  if (p.tags && p.tags.indexOf('NEU')>=0) {
+    var bBw=24*scale, bBh=12*scale;
+    ctx.fillStyle='#f59e0b';
+    ctx.beginPath(); roundRect(ctx,s.x+pw/2-bBw-3*scale,s.y-ph/2+3*scale,bBw,bBh,3*scale); ctx.fill();
+    ctx.fillStyle='#000'; ctx.font='bold '+(7*scale)+'px Inter'; ctx.textAlign='center';
+    ctx.fillText('NEU',s.x+pw/2-bBw/2-3*scale,s.y-ph/2+3*scale+bBh/2);
   }
+
+  ctx.textAlign='center';
 }
 
-// ── HOVER / TOOLTIP ──
-var hoveredNode = null;
-
-function getWorldPos(screenX, screenY) {
-  return {
-    x: (screenX - cx) / scale - offsetX,
-    y: (screenY - cy - 0) / scale - offsetY
-  };
+function roundRect(c,x,y,w,h,r) {
+  c.beginPath();
+  c.moveTo(x+r,y); c.lineTo(x+w-r,y);
+  c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);
+  c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);
+  c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();
 }
 
-function hitTest(wx, wy) {
-  var pw = 55, ph = 26;
-  for (var key in nodePositions) {
-    var np = nodePositions[key];
-    if (Math.abs(wx - np.x) < pw && Math.abs(wy - np.y) < ph) return np.node;
+// ── HIT TESTS ──
+function hitHub(wx,wy) {
+  if (focusHub) return null;
+  for (var i=0;i<HUBS.length;i++) {
+    var h=HUBS[i], hp=hubPos[h.id];
+    if (!hp) continue;
+    var d=Math.sqrt((wx-hp.x)*(wx-hp.x)+(wy-hp.y)*(wy-hp.y));
+    if (d<h.r+6) return h;
   }
   return null;
 }
 
+function hitNode(wx,wy) {
+  var pw=58, ph=24;
+  var best=null, bestD=9999;
+  Object.keys(positions).forEach(function(key) {
+    var pos=positions[key];
+    var dx=Math.abs(wx-pos.x), dy=Math.abs(wy-pos.y);
+    if (dx<pw && dy<ph) {
+      var d=dx+dy;
+      if (d<bestD){bestD=d;best={key:key,pos:pos};}
+    }
+  });
+  return best;
+}
+
+// ── EVENTS ──
 canvas.addEventListener('mousemove', function(e) {
-  if (isDragging) {
-    offsetX = dragStart.ox + (e.clientX - dragStart.x) / scale;
-    offsetY = dragStart.oy + (e.clientY - dragStart.y) / scale;
-    draw();
-    return;
+  if (isDrag) {
+    offX = dragS.ox + (e.clientX-dragS.x)/scale;
+    offY = dragS.oy + (e.clientY-dragS.y)/scale;
+    draw(); return;
   }
-  var wp = getWorldPos(e.clientX, e.clientY - 52);
-  var node = hitTest(wp.x, wp.y);
-  if (node !== hoveredNode) {
-    hoveredNode = node;
-    draw();
-  }
-  if (node) {
-    canvas.style.cursor = 'pointer';
-    showTooltip(e.clientX, e.clientY, node);
-  } else {
-    canvas.style.cursor = 'grab';
-    tooltip.classList.remove('show');
-  }
+  var wp = toWorld(e.clientX, e.clientY-56);
+  var node = hitNode(wp.x,wp.y);
+  var hub = hitHub(wp.x,wp.y);
+  var newKey = node ? node.key : null;
+  if (newKey!==hoveredKey) { hoveredKey=newKey; draw(); }
+  if (node) { canvas.style.cursor='pointer'; showTip(e,node.pos.project,node.pos.hub); }
+  else if (hub) { canvas.style.cursor='pointer'; hideTip(); }
+  else { canvas.style.cursor='grab'; hideTip(); }
 });
 
-canvas.addEventListener('mouseleave', function() {
-  tooltip.classList.remove('show');
-  hoveredNode = null;
-});
+canvas.addEventListener('mouseleave', function(){ hideTip(); hoveredKey=null; draw(); });
 
 canvas.addEventListener('mousedown', function(e) {
-  isDragging = true;
-  dragStart = { x: e.clientX, y: e.clientY, ox: offsetX, oy: offsetY };
-  canvas.style.cursor = 'grabbing';
+  isDrag=false;
+  dragS={x:e.clientX,y:e.clientY,ox:offX,oy:offY,moved:false};
+  canvas.addEventListener('mousemove',trackDrag,{once:false});
+  function trackDrag(ev){
+    if(Math.abs(ev.clientX-dragS.x)>4||Math.abs(ev.clientY-dragS.y)>4) { isDrag=true; }
+  }
+  canvas.addEventListener('mouseup', function up(ev){
+    canvas.removeEventListener('mousemove',trackDrag);
+    canvas.removeEventListener('mouseup',up);
+    if(!isDrag) handleClick(ev);
+    isDrag=false;
+    canvas.style.cursor='grab';
+  },{once:true});
 });
 
-canvas.addEventListener('mouseup', function() { isDragging = false; canvas.style.cursor = 'grab'; });
-
-// Touch
-var lastTouchDist = null;
-canvas.addEventListener('touchstart', function(e) {
-  if (e.touches.length === 1) {
-    isDragging = true;
-    dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox: offsetX, oy: offsetY };
+function handleClick(e) {
+  var wp = toWorld(e.clientX, e.clientY-56);
+  // Check hub
+  var hub = hitHub(wp.x,wp.y);
+  if (hub) { zoomToHub(hub.id); return; }
+  // Check node
+  var node = hitNode(wp.x,wp.y);
+  if (node && node.pos.project.live_url) {
+    window.open(node.pos.project.live_url,'_blank');
   }
-});
-canvas.addEventListener('touchmove', function(e) {
-  e.preventDefault();
-  if (e.touches.length === 1 && isDragging) {
-    offsetX = dragStart.ox + (e.touches[0].clientX - dragStart.x) / scale;
-    offsetY = dragStart.oy + (e.touches[0].clientY - dragStart.y) / scale;
-    draw();
-  } else if (e.touches.length === 2) {
-    var dx = e.touches[0].clientX - e.touches[1].clientX;
-    var dy = e.touches[0].clientY - e.touches[1].clientY;
-    var dist = Math.sqrt(dx*dx + dy*dy);
-    if (lastTouchDist) {
-      scale = Math.max(0.3, Math.min(2.5, scale * dist / lastTouchDist));
-      draw();
-    }
-    lastTouchDist = dist;
-  }
-}, { passive: false });
-canvas.addEventListener('touchend', function() { isDragging = false; lastTouchDist = null; });
+  // Click center or empty → back
+  var cDist=Math.sqrt(wp.x*wp.x+wp.y*wp.y);
+  if (focusHub && cDist<60) { zoomOut(); }
+}
 
-// Wheel zoom
+// ── ZOOM TO HUB ──
+function zoomToHub(hubId) {
+  focusHub = hubId;
+  offX=0; offY=0;
+  scale=1.1;
+  computePositions();
+  draw();
+  updateBreadcrumb();
+}
+
+function zoomOut() {
+  focusHub=null;
+  offX=0; offY=0; scale=1;
+  computePositions();
+  draw();
+  updateBreadcrumb();
+}
+
+function updateBreadcrumb() {
+  var bc=document.getElementById('breadcrumb');
+  if (focusHub) {
+    var h=getHubForId(focusHub);
+    var cnt=visibleProjects().length;
+    bc.innerHTML='<span style="cursor:pointer;color:#2563eb" onclick="zoomOut()">← Alle</span> › '+h.label.replace('\n',' ')+' · '+cnt+' Projekte · Klick auf Node öffnet GitHub Pages';
+    bc.style.pointerEvents='all';
+  } else {
+    bc.innerHTML='Alle Projekte · Klick auf Hub zum Einzoomen · Klick auf Node öffnet GitHub Pages';
+    bc.style.pointerEvents='none';
+  }
+}
+
+// ── WHEEL ZOOM ──
 canvas.addEventListener('wheel', function(e) {
   e.preventDefault();
-  var factor = e.deltaY < 0 ? 1.1 : 0.9;
-  scale = Math.max(0.3, Math.min(2.5, scale * factor));
+  var f=e.deltaY<0?1.1:0.9;
+  scale=Math.max(0.25,Math.min(3,scale*f));
   draw();
-}, { passive: false });
+},{passive:false});
 
-function showTooltip(mx, my, node) {
-  var hub = HUBS.filter(function(h){return h.id===node.hub})[0];
-  var col = COLORS[hub.color];
-  tooltip.innerHTML =
-    '<div class="tooltip-title" style="color:' + col.accent + '">' + node.label.replace('\n',' ') + '</div>' +
-    '<div class="tooltip-repo" style="color:' + col.accent + '88">' + node.repo + '</div>' +
-    '<div style="color:#c8cfe8">' + node.sublabel.replace('\n','<br>') + '</div>' +
-    (node.tags ? '<div class="tooltip-tags">' + node.tags.map(function(t){ return '<span class="tooltip-tag">' + t + '</span>'; }).join('') + '</div>' : '');
+// ── TOUCH ──
+canvas.addEventListener('touchstart',function(e){
+  if(e.touches.length===1){
+    isDrag=false;
+    dragS={x:e.touches[0].clientX,y:e.touches[0].clientY,ox:offX,oy:offY};
+  }
+},{passive:true});
+canvas.addEventListener('touchmove',function(e){
+  e.preventDefault();
+  if(e.touches.length===1){
+    var dx=e.touches[0].clientX-dragS.x, dy=e.touches[0].clientY-dragS.y;
+    if(Math.abs(dx)>3||Math.abs(dy)>3) isDrag=true;
+    offX=dragS.ox+dx/scale; offY=dragS.oy+dy/scale; draw();
+  } else if(e.touches.length===2){
+    var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if(lastPinchDist){scale=Math.max(0.25,Math.min(3,scale*d/lastPinchDist));draw();}
+    lastPinchDist=d;
+  }
+},{passive:false});
+canvas.addEventListener('touchend',function(e){
+  if(!isDrag&&e.changedTouches.length===1){
+    var t=e.changedTouches[0];
+    var wp=toWorld(t.clientX,t.clientY-56);
+    var hub=hitHub(wp.x,wp.y);
+    if(hub){zoomToHub(hub.id);return;}
+    var node=hitNode(wp.x,wp.y);
+    if(node&&node.pos.project.live_url) window.open(node.pos.project.live_url,'_blank');
+    var cDist=Math.sqrt(wp.x*wp.x+wp.y*wp.y);
+    if(focusHub&&cDist<60) zoomOut();
+  }
+  isDrag=false; lastPinchDist=null;
+},{passive:true});
 
-  var tx = mx + 16;
-  var ty = my + 10;
-  if (tx + 270 > W) tx = mx - 280;
-  if (ty + 160 > window.innerHeight) ty = my - 160;
-  tooltip.style.left = tx + 'px';
-  tooltip.style.top = ty + 'px';
-  tooltip.classList.add('show');
+// ── TOOLTIP ──
+var tip=document.getElementById('tip');
+function showTip(e,p,hub) {
+  if(!hub) return;
+  var st=STATUS[p.status]||STATUS['intern'];
+  var icons=[];
+  if(p.hat_supabase) icons.push('🗄 Supabase');
+  if(p.hat_stripe) icons.push('💳 Stripe');
+  if(p.tags&&p.tags.indexOf('Claude AI')>=0) icons.push('🤖 Claude AI');
+
+  tip.innerHTML=
+    '<div class="tip-title" style="color:'+hub.color+'">'+p.name+'</div>'+
+    '<div class="tip-repo" style="color:'+hub.color+'">'+p.repo+'</div>'+
+    (p.beschreibung?'<div class="tip-desc">'+p.beschreibung+'</div>':'')+
+    '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'+
+      '<span style="color:'+st.color+';font-weight:700;font-size:11px">'+st.label+'</span>'+
+      (p.live_url?'<span style="font-size:10px;color:#8b92b0">↗ öffnet GitHub Pages</span>':'<span style="font-size:10px;color:#6b7280">kein Link</span>')+
+    '</div>'+
+    (p.tags&&p.tags.length?'<div class="tip-tags">'+p.tags.map(function(t){return'<span class="tip-tag">'+t+'</span>';}).join('')+'</div>':'')+
+    (icons.length?'<div class="tip-icons">'+icons.map(function(ic){return'<span>'+ic+'</span>';}).join('')+'</div>':'');
+
+  var tx=e.clientX+16, ty=e.clientY+10;
+  if(tx+280>W) tx=e.clientX-290;
+  if(ty+200>window.innerHeight) ty=e.clientY-200;
+  tip.style.left=tx+'px'; tip.style.top=ty+'px';
+  tip.classList.add('show');
 }
+function hideTip(){tip.classList.remove('show');}
 
 // ── CONTROLS ──
-function resetView() { scale = 1; offsetX = 0; offsetY = 0; draw(); }
-function zoomIn()  { scale = Math.min(2.5, scale * 1.2); draw(); }
-function zoomOut() { scale = Math.max(0.3, scale * 0.8); draw(); }
+function resetView(){focusHub=null;offX=0;offY=0;scale=1;computePositions();draw();updateBreadcrumb();}
+function zoom(f){scale=Math.max(0.25,Math.min(3,scale*f));draw();}
 
-// ── roundRect polyfill ──
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    this.beginPath();
-    this.moveTo(x+r, y);
-    this.lineTo(x+w-r, y);
-    this.quadraticCurveTo(x+w, y, x+w, y+r);
-    this.lineTo(x+w, y+h-r);
-    this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-    this.lineTo(x+r, y+h);
-    this.quadraticCurveTo(x, y+h, x, y+h-r);
-    this.lineTo(x, y+r);
-    this.quadraticCurveTo(x, y, x+r, y);
-    this.closePath();
-  };
-}
-
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize',resize);
+loadData();
 </script>
 </body>
 </html>
