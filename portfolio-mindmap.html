@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URI RIEDEL – Portfolio Mindmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#0d1017;color:#f0f2f8;overflow:hidden;height:100vh;width:100vw}
+
+/* TOOLBAR */
+.toolbar{position:fixed;top:0;left:0;right:0;height:52px;background:#12151fdd;backdrop-filter:blur(12px);border-bottom:1px solid #2d3450;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
+.toolbar-left{display:flex;align-items:center;gap:16px}
+.logo{font-weight:800;font-size:15px;letter-spacing:-.3px}
+.logo span{color:#2563eb}
+.logo em{color:#f59e0b;font-style:normal}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#8b92b0}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+.toolbar-right{display:flex;gap:8px}
+.tb-btn{background:#1a1f2e;border:1px solid #2d3450;color:#8b92b0;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit}
+.tb-btn:hover{color:#f0f2f8;border-color:#8b92b0}
+
+/* CANVAS */
+#canvas{position:fixed;inset:0;top:52px;cursor:grab}
+#canvas:active{cursor:grabbing}
+
+/* HINT */
+.hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1f2e99;border:1px solid #2d3450;border-radius:20px;padding:6px 16px;font-size:11px;color:#8b92b0;pointer-events:none}
+
+/* TOOLTIP */
+.tooltip{position:fixed;background:#1a1f2e;border:1px solid #2d3450;border-radius:10px;padding:12px 16px;max-width:260px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;font-size:12px;line-height:1.6}
+.tooltip.show{opacity:1}
+.tooltip-title{font-weight:700;font-size:13px;margin-bottom:4px}
+.tooltip-repo{font-family:monospace;font-size:11px;color:#8b92b0;margin-bottom:6px}
+.tooltip-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tooltip-tag{background:#2d3450;color:#8b92b0;padding:2px 8px;border-radius:10px;font-size:10px}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div class="logo">rc<span>-digital</span> · rc<span>-classic</span> · <em>uri2503</em></div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#2563eb"></div>rc-digital</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#c9a84c"></div>rc-classic-dig</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#1a6b8a"></div>Oldtimer</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#10b981"></div>B2B Piloten</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#8b5cf6"></div>Intern</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#6b7280"></div>Parked</div>
+    </div>
+  </div>
+  <div class="toolbar-right">
+    <button class="tb-btn" onclick="resetView()">⌖ Reset</button>
+    <button class="tb-btn" onclick="zoomIn()">＋</button>
+    <button class="tb-btn" onclick="zoomOut()">－</button>
+  </div>
+</div>
+
+<canvas id="canvas"></canvas>
+<div class="hint">Ziehen zum Navigieren · Scrollen zum Zoomen · Hover für Details</div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var tooltip = document.getElementById('tooltip');
+
+// ── FARBEN PRO BRAND ──
+var COLORS = {
+  'rc-digital':     { bg:'#1e3a8a', border:'#2563eb', text:'#93c5fd', accent:'#2563eb' },
+  'rc-classic-dig': { bg:'#3d2e0a', border:'#c9a84c', text:'#f0d080', accent:'#c9a84c' },
+  'oldtimer':       { bg:'#0c2d38', border:'#1a6b8a', text:'#67c5e8', accent:'#1a6b8a' },
+  'b2b':            { bg:'#064e3b', border:'#10b981', text:'#6ee7b7', accent:'#10b981' },
+  'intern':         { bg:'#2e1065', border:'#8b5cf6', text:'#c4b5fd', accent:'#8b5cf6' },
+  'parked':         { bg:'#1f2937', border:'#6b7280', text:'#9ca3af', accent:'#6b7280' }
+};
+
+// ── NODES ──
+// cx, cy = relative zu Center in Pixeln (wird später positioniert)
+var CENTER = { label:'URI RIEDEL\nPortfolio', type:'center' };
+
+var HUBS = [
+  { id:'rcdigital',   label:'rc-digital', sublabel:'B2C / B2B SaaS', type:'hub', color:'rc-digital',     angle:0 },
+  { id:'rcclassicdig',label:'rc-classic-dig', sublabel:'Oldtimer Digital', type:'hub', color:'rc-classic-dig', angle:72 },
+  { id:'oldtimer',    label:'Oldtimer\nEiswerk', sublabel:'Dry-Ice Service', type:'hub', color:'oldtimer',    angle:144 },
+  { id:'b2b',         label:'B2B Piloten', sublabel:'Partnerprojekte', type:'hub', color:'b2b',             angle:216 },
+  { id:'intern',      label:'Intern &\nInfrastruktur', sublabel:'Tools & Zentrale', type:'hub', color:'intern',     angle:288 },
+];
+
+var NODES = [
+  // rc-digital
+  { hub:'rcdigital', label:'BackKI', repo:'backki-*', sublabel:'Bäckerei Warenverlust\nKI-Analytics · 29€/Report', tags:['Stripe live','Supabase','Claude API','Funnel 1 live'] },
+  { hub:'rcdigital', label:'CrashGuide', repo:'crashguide-*', sublabel:'KFZ Schadenbewertung\nFunnel A (3,99€) + B (4,99€)', tags:['Stripe','2 Funnels','Mein-Auto-Assistent Hub'] },
+  { hub:'rcdigital', label:'TeilePilot', repo:'teilepilot', sublabel:'Kleinanzeigen KI-Autopilot\nInserate + Antworten · Credits', tags:['NEU','Credits System','Stripe','Supabase'] },
+  { hub:'rcdigital', label:'AutoAI Tools', repo:'AutoAITools-*', sublabel:'KFZ-Händler SaaS\nBewertung · Inserate · Archiv', tags:['Händler B2B','Supabase','mobile.de'] },
+  { hub:'rcdigital', label:'Betriebspass', repo:'betriebspass', sublabel:'Business Continuity\n39€ one-time + Addons', tags:['Stripe','Testament','Digitaler Wächter'] },
+  { hub:'rcdigital', label:'Mein-Auto-\nAssistent', repo:'mein-auto-assistent.de', sublabel:'Hub: CrashGuide + AutoAI\n+ HU-Vorab-Check', tags:['Domain gesichert','Hub Konzept'] },
+
+  // rc-classic-dig
+  { hub:'rcclassicdig', label:'RC Klassiker\nWertdossier', repo:'rc-classic-dig-wertdossier', sublabel:'Oldtimer Bewertung\nFreemium → One-Time', tags:['Live','Web Search','Lead Gate','Stripe'] },
+  { hub:'rcclassicdig', label:'RC Restaurations\nDoku', repo:'rc-classic-dig-doku', sublabel:'Restaurations-Dokumentation\nKunden-Portal 30-Tage-Code', tags:['Live','Foto-Upload','CI konvertierung offen'] },
+  { hub:'rcclassicdig', label:'RC Foto-Triage', repo:'foto_triage', sublabel:'KI Foto-Selektion\nBatch-Pipeline', tags:['Claude API','JSZip','Supabase Storage'] },
+  { hub:'rcclassicdig', label:'Tools Hub', repo:'rc-classic-dig-tools-hub', sublabel:'Bundle Landing\nFreemium-to-Purchase', tags:['Live','Hub alle Oldtimer Tools'] },
+
+  // Oldtimer Eiswerk
+  { hub:'oldtimer', label:'Eiswerk\nCheck', repo:'oldtimer-eiswerk', sublabel:'Eisstrahl-Check v4\nFahrzeug DB · KI Analyse · WhatsApp CTA', tags:['R107','W123','S124','Lead Capture'] },
+  { hub:'oldtimer', label:'Eiswerk\nWertetabelle', repo:'oldtimer-eiswerk', sublabel:'Import Tool\nOldtimer Markt → Supabase', tags:['KI Extraktion','3 Baureihen','58 Modelle'] },
+
+  // B2B Piloten
+  { hub:'b2b', label:'GTÜ HU-\nVorab-Check', repo:'gtue-hu-vorab-check / auto_check_hu', sublabel:'Pilot: Steffen Höhn GTÜ\n49€/Monat Station-Lizenz', tags:['10k Postalkampagne','P1 offen: WhatsApp Nr.','DSGVO vor Go-Live'] },
+  { hub:'b2b', label:'BauDesk', repo:'baudesk', sublabel:'Pilot: MUSA Elektrotechnik\n~90 MA · Stempeluhr · Rapporte', tags:['59-189€/Monat','Setup 1.500€','Rechnungen'] },
+  { hub:'b2b', label:'SmartGate', repo:'smartgate-app', sublabel:'Zugang · Zeiterfassung · Kamera\nKonzept parked', tags:['smart-gate-app.de','parked'] },
+
+  // Intern
+  { hub:'intern', label:'rc-digital\nZentrale', repo:'zentrale.html', sublabel:'Command Center\n~38 Repos · GitHub Sync', tags:['PIN 2503','rc_projekte','Supabase','Docs'] },
+  { hub:'intern', label:'rc-digital.de', repo:'uri2503.github.io', sublabel:'Portfolio Landing\nMidnight Blue CI', tags:['index','impressum','datenschutz'] },
+  { hub:'intern', label:'Lingua\nTrainer', repo:'Lingua_trainer', sublabel:'EN/ES C1-C2\nPhrasen · AI Conv · Übungen', tags:['Personal','Claude API'] },
+  { hub:'intern', label:'Mein Schatz', repo:'mein-schatz', sublabel:'Digitales Inventar\nZimmer → Möbel → Item', tags:['Personal','98 Kategorien','Pink/Neon CI'] },
+  { hub:'intern', label:'RC Dev\nDashboard', repo:'intern', sublabel:'Projekt-Management\nBrand-coded Cards', tags:['rc_projekt_docs','Filter','GitHub Pages'] },
+];
+
+// ── LAYOUT ──
+var W, H, cx, cy;
+var scale = 1;
+var offsetX = 0, offsetY = 0;
+var isDragging = false;
+var dragStart = { x:0, y:0 };
+var hubPositions = {};
+var nodePositions = {};
+
+var HUB_RADIUS = 200;
+var NODE_RADIUS = 340;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight - 52;
+  cx = W / 2;
+  cy = H / 2;
+  computePositions();
+  draw();
+}
+
+function computePositions() {
+  // Hub positions (pentagon)
+  HUBS.forEach(function(h) {
+    var rad = (h.angle - 90) * Math.PI / 180;
+    hubPositions[h.id] = {
+      x: Math.cos(rad) * HUB_RADIUS,
+      y: Math.sin(rad) * HUB_RADIUS
+    };
+  });
+
+  // Node positions: distribute around each hub
+  var hubNodes = {};
+  NODES.forEach(function(n) {
+    if (!hubNodes[n.hub]) hubNodes[n.hub] = [];
+    hubNodes[n.hub].push(n);
+  });
+
+  Object.keys(hubNodes).forEach(function(hubId) {
+    var hub = HUBS.filter(function(h){return h.id===hubId})[0];
+    var nodes = hubNodes[hubId];
+    var hubAngleDeg = hub.angle;
+    var spread = Math.min(70, 140 / nodes.length * 1.2);
+    var startAngle = hubAngleDeg - (spread * (nodes.length - 1)) / 2;
+
+    nodes.forEach(function(n, i) {
+      var deg = startAngle + i * spread;
+      var rad = (deg - 90) * Math.PI / 180;
+      nodePositions[n.label] = {
+        x: Math.cos(rad) * NODE_RADIUS,
+        y: Math.sin(rad) * NODE_RADIUS,
+        node: n
+      };
+    });
+  });
+}
+
+// ── DRAW ──
+function toScreen(wx, wy) {
+  return {
+    x: (wx + offsetX) * scale + cx,
+    y: (wy + offsetY) * scale + cy
+  };
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background grid dots
+  ctx.fillStyle = '#1a1f2e22';
+  var gridSpacing = 40 * scale;
+  var startX = ((offsetX * scale + cx) % gridSpacing + gridSpacing) % gridSpacing;
+  var startY = ((offsetY * scale + cy) % gridSpacing + gridSpacing) % gridSpacing;
+  for (var gx = startX; gx < W; gx += gridSpacing) {
+    for (var gy = startY; gy < H; gy += gridSpacing) {
+      ctx.beginPath();
+      ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Draw connections: hub → nodes
+  NODES.forEach(function(n) {
+    var hp = hubPositions[n.hub];
+    var np = nodePositions[n.label];
+    if (!hp || !np) return;
+    var hub = HUBS.filter(function(h){return h.id===n.hub})[0];
+    var col = COLORS[hub.color];
+    var s1 = toScreen(hp.x, hp.y);
+    var s2 = toScreen(np.x, np.y);
+    ctx.beginPath();
+    ctx.moveTo(s1.x, s1.y);
+    ctx.lineTo(s2.x, s2.y);
+    ctx.strokeStyle = col.accent + '44';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.stroke();
+  });
+
+  // Draw connections: center → hubs
+  HUBS.forEach(function(h) {
+    var hp = hubPositions[h.id];
+    var col = COLORS[h.color];
+    var s1 = toScreen(0, 0);
+    var s2 = toScreen(hp.x, hp.y);
+    ctx.beginPath();
+    ctx.moveTo(s1.x, s1.y);
+    ctx.lineTo(s2.x, s2.y);
+    ctx.strokeStyle = col.accent + '66';
+    ctx.lineWidth = 2 * scale;
+    ctx.stroke();
+  });
+
+  // Draw center
+  drawCenter();
+
+  // Draw hubs
+  HUBS.forEach(function(h) { drawHub(h); });
+
+  // Draw nodes
+  NODES.forEach(function(n) { drawNode(n); });
+}
+
+function drawCenter() {
+  var s = toScreen(0, 0);
+  var r = 56 * scale;
+  // Glow
+  var g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 1.5);
+  g.addColorStop(0, '#2563eb33');
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, r * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#12151f';
+  ctx.fill();
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 2.5 * scale;
+  ctx.stroke();
+
+  ctx.fillStyle = '#f0f2f8';
+  ctx.font = 'bold ' + (13 * scale) + 'px Inter';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('URI RIEDEL', s.x, s.y - 9 * scale);
+  ctx.font = (10 * scale) + 'px Inter';
+  ctx.fillStyle = '#8b92b0';
+  ctx.fillText('Portfolio', s.x, s.y + 9 * scale);
+}
+
+function drawHub(h) {
+  var hp = hubPositions[h.id];
+  var s = toScreen(hp.x, hp.y);
+  var col = COLORS[h.color];
+  var r = 40 * scale;
+
+  // Glow
+  var g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 1.8);
+  g.addColorStop(0, col.accent + '22');
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, r * 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Circle
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = col.bg;
+  ctx.fill();
+  ctx.strokeStyle = col.border;
+  ctx.lineWidth = 2 * scale;
+  ctx.stroke();
+
+  // Label
+  var lines = h.label.split('\n');
+  ctx.fillStyle = col.text;
+  ctx.font = 'bold ' + (11 * scale) + 'px Inter';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  var lineH = 14 * scale;
+  var totalH = lines.length * lineH;
+  lines.forEach(function(line, i) {
+    ctx.fillText(line, s.x, s.y - totalH/2 + lineH * i + lineH/2 - (lines.length > 1 ? 3 * scale : 0));
+  });
+
+  // Sublabel
+  ctx.fillStyle = col.accent + 'aa';
+  ctx.font = (8.5 * scale) + 'px Inter';
+  ctx.fillText(h.sublabel, s.x, s.y + r + 12 * scale);
+}
+
+function drawNode(n) {
+  var np = nodePositions[n.label];
+  if (!np) return;
+  var s = toScreen(np.x, np.y);
+  var hub = HUBS.filter(function(h){return h.id===n.hub})[0];
+  var col = COLORS[hub.color];
+
+  var pw = 110 * scale;
+  var ph = 52 * scale;
+  var rx = 8 * scale;
+
+  // Shadow/glow
+  ctx.shadowColor = col.accent + '44';
+  ctx.shadowBlur = 12 * scale;
+
+  // Pill
+  ctx.beginPath();
+  ctx.roundRect(s.x - pw/2, s.y - ph/2, pw, ph, rx);
+  ctx.fillStyle = col.bg;
+  ctx.fill();
+  ctx.strokeStyle = col.border;
+  ctx.lineWidth = 1.5 * scale;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Label
+  var lines = n.label.split('\n');
+  ctx.fillStyle = col.text;
+  ctx.font = 'bold ' + (10 * scale) + 'px Inter';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  var lineH = 13 * scale;
+  lines.forEach(function(line, i) {
+    var yOff = lines.length === 1 ? 0 : (i - 0.5) * lineH;
+    ctx.fillText(line, s.x, s.y + yOff - 5 * scale);
+  });
+
+  // Repo tag
+  if (n.repo && scale > 0.6) {
+    ctx.fillStyle = col.accent + '88';
+    ctx.font = (7.5 * scale) + 'px Inter';
+    var repo = n.repo.length > 22 ? n.repo.substr(0,20) + '…' : n.repo;
+    ctx.fillText(repo, s.x, s.y + ph/2 - 8 * scale);
+  }
+
+  // NEU badge
+  if (n.tags && n.tags.indexOf('NEU') >= 0) {
+    var bw = 28 * scale;
+    var bh = 14 * scale;
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.roundRect(s.x + pw/2 - bw - 4*scale, s.y - ph/2 + 4*scale, bw, bh, 4*scale);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold ' + (8 * scale) + 'px Inter';
+    ctx.fillText('NEU', s.x + pw/2 - bw/2 - 4*scale, s.y - ph/2 + 4*scale + bh/2);
+  }
+}
+
+// ── HOVER / TOOLTIP ──
+var hoveredNode = null;
+
+function getWorldPos(screenX, screenY) {
+  return {
+    x: (screenX - cx) / scale - offsetX,
+    y: (screenY - cy - 0) / scale - offsetY
+  };
+}
+
+function hitTest(wx, wy) {
+  var pw = 55, ph = 26;
+  for (var key in nodePositions) {
+    var np = nodePositions[key];
+    if (Math.abs(wx - np.x) < pw && Math.abs(wy - np.y) < ph) return np.node;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousemove', function(e) {
+  if (isDragging) {
+    offsetX = dragStart.ox + (e.clientX - dragStart.x) / scale;
+    offsetY = dragStart.oy + (e.clientY - dragStart.y) / scale;
+    draw();
+    return;
+  }
+  var wp = getWorldPos(e.clientX, e.clientY - 52);
+  var node = hitTest(wp.x, wp.y);
+  if (node !== hoveredNode) {
+    hoveredNode = node;
+    draw();
+  }
+  if (node) {
+    canvas.style.cursor = 'pointer';
+    showTooltip(e.clientX, e.clientY, node);
+  } else {
+    canvas.style.cursor = 'grab';
+    tooltip.classList.remove('show');
+  }
+});
+
+canvas.addEventListener('mouseleave', function() {
+  tooltip.classList.remove('show');
+  hoveredNode = null;
+});
+
+canvas.addEventListener('mousedown', function(e) {
+  isDragging = true;
+  dragStart = { x: e.clientX, y: e.clientY, ox: offsetX, oy: offsetY };
+  canvas.style.cursor = 'grabbing';
+});
+
+canvas.addEventListener('mouseup', function() { isDragging = false; canvas.style.cursor = 'grab'; });
+
+// Touch
+var lastTouchDist = null;
+canvas.addEventListener('touchstart', function(e) {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox: offsetX, oy: offsetY };
+  }
+});
+canvas.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  if (e.touches.length === 1 && isDragging) {
+    offsetX = dragStart.ox + (e.touches[0].clientX - dragStart.x) / scale;
+    offsetY = dragStart.oy + (e.touches[0].clientY - dragStart.y) / scale;
+    draw();
+  } else if (e.touches.length === 2) {
+    var dx = e.touches[0].clientX - e.touches[1].clientX;
+    var dy = e.touches[0].clientY - e.touches[1].clientY;
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    if (lastTouchDist) {
+      scale = Math.max(0.3, Math.min(2.5, scale * dist / lastTouchDist));
+      draw();
+    }
+    lastTouchDist = dist;
+  }
+}, { passive: false });
+canvas.addEventListener('touchend', function() { isDragging = false; lastTouchDist = null; });
+
+// Wheel zoom
+canvas.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  var factor = e.deltaY < 0 ? 1.1 : 0.9;
+  scale = Math.max(0.3, Math.min(2.5, scale * factor));
+  draw();
+}, { passive: false });
+
+function showTooltip(mx, my, node) {
+  var hub = HUBS.filter(function(h){return h.id===node.hub})[0];
+  var col = COLORS[hub.color];
+  tooltip.innerHTML =
+    '<div class="tooltip-title" style="color:' + col.accent + '">' + node.label.replace('\n',' ') + '</div>' +
+    '<div class="tooltip-repo" style="color:' + col.accent + '88">' + node.repo + '</div>' +
+    '<div style="color:#c8cfe8">' + node.sublabel.replace('\n','<br>') + '</div>' +
+    (node.tags ? '<div class="tooltip-tags">' + node.tags.map(function(t){ return '<span class="tooltip-tag">' + t + '</span>'; }).join('') + '</div>' : '');
+
+  var tx = mx + 16;
+  var ty = my + 10;
+  if (tx + 270 > W) tx = mx - 280;
+  if (ty + 160 > window.innerHeight) ty = my - 160;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = ty + 'px';
+  tooltip.classList.add('show');
+}
+
+// ── CONTROLS ──
+function resetView() { scale = 1; offsetX = 0; offsetY = 0; draw(); }
+function zoomIn()  { scale = Math.min(2.5, scale * 1.2); draw(); }
+function zoomOut() { scale = Math.max(0.3, scale * 0.8); draw(); }
+
+// ── roundRect polyfill ──
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.lineTo(x+w-r, y);
+    this.quadraticCurveTo(x+w, y, x+w, y+r);
+    this.lineTo(x+w, y+h-r);
+    this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    this.lineTo(x+r, y+h);
+    this.quadraticCurveTo(x, y+h, x, y+h-r);
+    this.lineTo(x, y+r);
+    this.quadraticCurveTo(x, y, x+r, y);
+    this.closePath();
+  };
+}
+
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>
