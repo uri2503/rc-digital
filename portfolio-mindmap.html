@@ -46,6 +46,30 @@ body{font-family:'Inter',sans-serif;background:#0d1017;color:#f0f2f8;overflow:hi
 .loading-dot:nth-child(2){animation-delay:.2s}.loading-dot:nth-child(3){animation-delay:.4s}
 .loading-dots{display:flex;gap:6px}
 @keyframes lpulse{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+
+/* EDIT MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000000aa;backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:#12151f;border:1px solid #2d3450;border-radius:14px;max-width:460px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;box-shadow:0 20px 60px #000000cc}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{cursor:pointer;color:#8b92b0;font-size:18px;line-height:1;background:none;border:none;padding:0;font-family:inherit}
+.modal-close:hover{color:#f0f2f8}
+.modal-grid{display:flex;flex-direction:column;gap:10px}
+.modal-field label{display:block;font-size:11px;color:#8b92b0;margin-bottom:4px;font-weight:600}
+.modal-field input[type=text],.modal-field input[type=number],.modal-field select,.modal-field textarea{width:100%;background:#1a1f2e;border:1px solid #2d3450;color:#f0f2f8;padding:7px 9px;border-radius:7px;font-size:12px;font-family:inherit}
+.modal-field input:focus,.modal-field select:focus,.modal-field textarea:focus{outline:none;border-color:#2563eb}
+.modal-field textarea{resize:vertical;min-height:46px}
+.modal-checks{display:flex;gap:16px;flex-wrap:wrap}
+.modal-check{display:flex;align-items:center;gap:6px;font-size:11px;color:#8b92b0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-btn{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #2d3450;background:#1a1f2e;color:#f0f2f8;font-family:inherit}
+.modal-btn:hover{border-color:#8b92b0}
+.modal-btn-save{background:#2563eb;border-color:#2563eb;color:#fff}
+.modal-btn-save:hover{background:#1d4ed8}
+.modal-btn-save:disabled{opacity:.5;cursor:not-allowed}
+.modal-msg{font-size:11px;margin-top:10px;display:none}
+.modal-msg.err{color:#f87171}
+.modal-msg.ok{color:#10b981}
 </style>
 </head>
 <body>
@@ -74,6 +98,44 @@ body{font-family:'Inter',sans-serif;background:#0d1017;color:#f0f2f8;overflow:hi
 <div class="breadcrumb" id="breadcrumb">Alle Projekte · Scrollen zum Zoomen · Ziehen zum Navigieren</div>
 <div class="tip" id="tip"></div>
 
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal-box">
+    <div class="modal-title"><span id="editTitle">Projekt bearbeiten</span><button class="modal-close" onclick="closeEditModal()">✕</button></div>
+    <div class="modal-grid">
+      <div class="modal-field"><label>Name</label><input type="text" id="ed-name"></div>
+      <div class="modal-field"><label>Repo</label><input type="text" id="ed-repo"></div>
+      <div class="modal-field"><label>Brand (Hub-Zuordnung)</label><input type="text" id="ed-brand" list="brandList"></div>
+      <datalist id="brandList"></datalist>
+      <div class="modal-field"><label>Status</label>
+        <select id="ed-status">
+          <option value="live">Live</option>
+          <option value="wip">WIP</option>
+          <option value="pause">Pause</option>
+          <option value="intern">Intern</option>
+        </select>
+      </div>
+      <div class="modal-field"><label>Live URL</label><input type="text" id="ed-live_url"></div>
+      <div class="modal-field"><label>Tags (Komma-getrennt)</label><input type="text" id="ed-tags"></div>
+      <div class="modal-field"><label>Sort Order</label><input type="number" id="ed-sort_order"></div>
+      <div class="modal-checks">
+        <label class="modal-check"><input type="checkbox" id="ed-hat_supabase"> Supabase</label>
+        <label class="modal-check"><input type="checkbox" id="ed-hat_stripe"> Stripe</label>
+        <label class="modal-check"><input type="checkbox" id="ed-oeffentlich"> Öffentlich</label>
+      </div>
+      <div class="modal-field"><label>Beschreibung</label><textarea id="ed-beschreibung"></textarea></div>
+      <div class="modal-field"><label>Notizen</label><textarea id="ed-notizen"></textarea></div>
+      <div class="modal-field"><label>Memo</label><textarea id="ed-memo"></textarea></div>
+      <div class="modal-field"><label>Stripe Info (JSON)</label><textarea id="ed-stripe_info"></textarea></div>
+      <div class="modal-field"><label>Extra Links (JSON)</label><textarea id="ed-extra_links"></textarea></div>
+    </div>
+    <div class="modal-msg" id="editMsg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeEditModal()">Abbrechen</button>
+      <button class="modal-btn modal-btn-save" id="editSaveBtn" onclick="saveEdit()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──
 var SB_URL = 'https://ysqzdqazcgyuzdorauiq.supabase.co';
@@ -83,6 +145,12 @@ var SB_KEY = localStorage.getItem('tp_config') ? (JSON.parse(localStorage.getIte
 if (!SB_KEY) {
   var cfg = localStorage.getItem('tp_config');
   if (cfg) { try { SB_KEY = JSON.parse(cfg).sbKey || ''; } catch(e){} }
+}
+
+function getHeaders(isWrite) {
+  var h = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+  if (isWrite) { h['Content-Type'] = 'application/json'; h['Prefer'] = 'return=representation'; }
+  return h;
 }
 
 // ── BRAND → HUB MAPPING ──
@@ -141,16 +209,14 @@ var NODE_R_FOCUSED = 180; // when focused
 
 // ── LOAD DATA ──
 function loadData() {
-  var headers = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
-  
   // If no key, use hardcoded fallback data
   if (!SB_KEY) {
     useFallbackData();
     return;
   }
 
-  fetch(SB_URL + '/rest/v1/rc_projekte?select=name,repo,brand,status,live_url,hat_supabase,hat_stripe,tags,beschreibung&order=sort_order', {
-    headers: headers
+  fetch(SB_URL + '/rest/v1/rc_projekte?select=id,name,repo,brand,status,live_url,hat_supabase,hat_stripe,stripe_info,tags,sort_order,notizen,extra_links,memo,oeffentlich,beschreibung&order=sort_order', {
+    headers: getHeaders()
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -528,6 +594,17 @@ function drawNode(key, pos) {
     ctx.fillText('NEU',s.x+pw/2-bBw/2-3*scale,s.y-ph/2+3*scale+bBh/2);
   }
 
+  // Edit pencil icon (bottom-right corner)
+  var pr = 9*scale;
+  var pcx = s.x+pw/2-pr-2*scale, pcy = s.y+ph/2-pr-2*scale;
+  ctx.beginPath(); ctx.arc(pcx,pcy,pr,0,Math.PI*2);
+  ctx.fillStyle = isHov ? hub.color : '#1a1f2ecc';
+  ctx.fill();
+  ctx.strokeStyle = hub.color+'88'; ctx.lineWidth=1*scale; ctx.stroke();
+  ctx.fillStyle = isHov ? '#000' : hub.color;
+  ctx.font=(8.5*scale)+'px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('✎', pcx, pcy+0.5*scale);
+
   ctx.textAlign='center';
 }
 
@@ -570,6 +647,24 @@ function hitNode(wx,wy) {
   return best;
 }
 
+// Hit test for the small edit-pencil icon (screen-space, independent of world zoom)
+function hitPencil(sx, sy) {
+  var best=null, bestD=9999;
+  Object.keys(positions).forEach(function(key) {
+    var pos = positions[key];
+    var s = toScreen(pos.x, pos.y);
+    var isHov = hoveredKey === key;
+    var pw = (isHov?120:112)*scale;
+    var ph = (isHov?50:44)*scale;
+    var pr = 9*scale;
+    var pcx = s.x+pw/2-pr-2*scale, pcy = s.y+ph/2-pr-2*scale;
+    var d = Math.hypot(sx-pcx, sy-pcy);
+    var hitR = Math.max(pr+4, 14);
+    if (d<hitR && d<bestD) { bestD=d; best=pos.project; }
+  });
+  return best;
+}
+
 // ── EVENTS ──
 canvas.addEventListener('mousemove', function(e) {
   if (isDrag) {
@@ -606,6 +701,8 @@ canvas.addEventListener('mousedown', function(e) {
 });
 
 function handleClick(e) {
+  var pencilHit = hitPencil(e.clientX, e.clientY-56);
+  if (pencilHit) { openEditModal(pencilHit); return; }
   var wp = toWorld(e.clientX, e.clientY-56);
   // Check hub
   var hub = hitHub(wp.x,wp.y);
@@ -681,6 +778,8 @@ canvas.addEventListener('touchmove',function(e){
 canvas.addEventListener('touchend',function(e){
   if(!isDrag&&e.changedTouches.length===1){
     var t=e.changedTouches[0];
+    var pencilHit = hitPencil(t.clientX, t.clientY-56);
+    if (pencilHit) { openEditModal(pencilHit); isDrag=false; lastPinchDist=null; return; }
     var wp=toWorld(t.clientX,t.clientY-56);
     var hub=hitHub(wp.x,wp.y);
     if(hub){zoomToHub(hub.id);return;}
@@ -724,6 +823,111 @@ function hideTip(){tip.classList.remove('show');}
 // ── CONTROLS ──
 function resetView(){focusHub=null;offX=0;offY=0;scale=1;computePositions();draw();updateBreadcrumb();}
 function zoom(f){scale=Math.max(0.25,Math.min(3,scale*f));draw();}
+
+// ── EDIT MODAL ──
+var editingProject = null;
+
+function openEditModal(p) {
+  editingProject = p;
+  document.getElementById('editTitle').textContent = 'Bearbeiten: ' + p.name;
+  document.getElementById('ed-name').value = p.name || '';
+  document.getElementById('ed-repo').value = p.repo || '';
+  document.getElementById('ed-brand').value = p.brand || '';
+  document.getElementById('ed-status').value = p.status || 'wip';
+  document.getElementById('ed-live_url').value = p.live_url || '';
+  document.getElementById('ed-tags').value = (p.tags && p.tags.length) ? p.tags.join(', ') : '';
+  document.getElementById('ed-sort_order').value = (p.sort_order!=null) ? p.sort_order : '';
+  document.getElementById('ed-hat_supabase').checked = !!p.hat_supabase;
+  document.getElementById('ed-hat_stripe').checked = !!p.hat_stripe;
+  document.getElementById('ed-oeffentlich').checked = !!p.oeffentlich;
+  document.getElementById('ed-beschreibung').value = p.beschreibung || '';
+  document.getElementById('ed-notizen').value = p.notizen || '';
+  document.getElementById('ed-memo').value = p.memo || '';
+  document.getElementById('ed-stripe_info').value = p.stripe_info ? (typeof p.stripe_info==='string'?p.stripe_info:JSON.stringify(p.stripe_info)) : '';
+  document.getElementById('ed-extra_links').value = p.extra_links ? (typeof p.extra_links==='string'?p.extra_links:JSON.stringify(p.extra_links)) : '';
+
+  var msg = document.getElementById('editMsg');
+  msg.style.display='none'; msg.className='modal-msg';
+
+  var saveBtn = document.getElementById('editSaveBtn');
+  if (!SB_KEY || !p.id) {
+    saveBtn.disabled = true;
+    msg.textContent = !SB_KEY ? 'Kein Supabase-Zugriff – Änderungen können nicht gespeichert werden.' : 'Keine Projekt-ID gefunden – Speichern nicht möglich.';
+    msg.className = 'modal-msg err'; msg.style.display='block';
+  } else {
+    saveBtn.disabled = false;
+  }
+
+  var dl = document.getElementById('brandList');
+  dl.innerHTML = Object.keys(BRAND_HUB).map(function(b){ return '<option value="'+b+'">'; }).join('');
+
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editOverlay').classList.remove('show');
+  editingProject = null;
+}
+
+function saveEdit() {
+  if (!editingProject || !editingProject.id || !SB_KEY) return;
+  var msg = document.getElementById('editMsg');
+  var saveBtn = document.getElementById('editSaveBtn');
+
+  var tagsRaw = document.getElementById('ed-tags').value;
+  var tags = tagsRaw.split(',').map(function(t){return t.trim();}).filter(function(t){return t.length>0;});
+
+  var payload = {
+    name: document.getElementById('ed-name').value.trim(),
+    repo: document.getElementById('ed-repo').value.trim(),
+    brand: document.getElementById('ed-brand').value.trim(),
+    status: document.getElementById('ed-status').value,
+    live_url: document.getElementById('ed-live_url').value.trim() || null,
+    tags: tags.length ? tags : null,
+    sort_order: document.getElementById('ed-sort_order').value !== '' ? parseInt(document.getElementById('ed-sort_order').value,10) : null,
+    hat_supabase: document.getElementById('ed-hat_supabase').checked,
+    hat_stripe: document.getElementById('ed-hat_stripe').checked,
+    oeffentlich: document.getElementById('ed-oeffentlich').checked,
+    beschreibung: document.getElementById('ed-beschreibung').value,
+    notizen: document.getElementById('ed-notizen').value,
+    memo: document.getElementById('ed-memo').value
+  };
+
+  var stripeRaw = document.getElementById('ed-stripe_info').value.trim();
+  if (stripeRaw) { try { payload.stripe_info = JSON.parse(stripeRaw); } catch(e) { payload.stripe_info = stripeRaw; } }
+  else { payload.stripe_info = null; }
+
+  var linksRaw = document.getElementById('ed-extra_links').value.trim();
+  if (linksRaw) { try { payload.extra_links = JSON.parse(linksRaw); } catch(e) { payload.extra_links = linksRaw; } }
+  else { payload.extra_links = null; }
+
+  saveBtn.disabled = true; saveBtn.textContent = 'Speichert…';
+  msg.style.display = 'none';
+
+  fetch(SB_URL + '/rest/v1/rc_projekte?id=eq.' + editingProject.id, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(){
+    for (var k in payload) { editingProject[k] = payload[k]; }
+    computePositions();
+    draw();
+    msg.textContent = 'Gespeichert ✓';
+    msg.className = 'modal-msg ok'; msg.style.display = 'block';
+    saveBtn.disabled = false; saveBtn.textContent = 'Speichern';
+    setTimeout(closeEditModal, 700);
+  })
+  .catch(function(err){
+    msg.textContent = 'Fehler beim Speichern: ' + err.message;
+    msg.className = 'modal-msg err'; msg.style.display = 'block';
+    saveBtn.disabled = false; saveBtn.textContent = 'Speichern';
+  });
+}
 
 window.addEventListener('resize',resize);
 loadData();
