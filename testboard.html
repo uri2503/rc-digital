@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testlauf Board</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg: #14161a;
+    --panel: #1c1f26;
+    --panel-2: #21252d;
+    --line: #2c313b;
+    --text: #e8e9ec;
+    --text-dim: #8b909c;
+    --accent: #4f8cff;
+    --ok: #33c17a;
+    --bug: #ef5350;
+    --idea: #f5a623;
+    --frage: #9c7cf5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 100px;
+  }
+  header{
+    position: sticky; top:0; z-index:10;
+    background: rgba(20,22,26,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  header h1{
+    font-size: 16px; margin:0; font-weight:700; letter-spacing:0.2px;
+  }
+  header .sub{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .header-btns{ display:flex; gap:8px; }
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:8px;
+    font-size:13px; font-weight:600; padding:9px 13px;
+    transition: transform .08s ease, opacity .15s ease;
+  }
+  button:active{ transform: scale(0.96); }
+  .btn-primary{ background: var(--accent); color:#fff; }
+  .btn-ghost{ background: var(--panel-2); color: var(--text); border:1px solid var(--line); }
+  .btn-danger{ background: transparent; color: var(--bug); border:1px solid rgba(239,83,80,0.4); }
+
+  main{ padding: 14px; max-width: 720px; margin:0 auto; }
+
+  .empty{
+    text-align:center; padding: 60px 20px; color:var(--text-dim);
+  }
+  .empty div.icon{ font-size:34px; margin-bottom:10px; }
+
+  .card{
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .card-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 12px;
+    border-bottom:1px solid var(--line);
+    gap:8px;
+  }
+  .card-head input.title{
+    background:transparent; border:none; color:var(--text);
+    font-size:14px; font-weight:700; flex:1; padding:4px 2px;
+    border-bottom:1px dashed transparent;
+  }
+  .card-head input.title:focus{ outline:none; border-bottom:1px dashed var(--accent); }
+  .del-btn{
+    background:none; border:none; color:var(--text-dim); font-size:16px;
+    padding:4px 8px; line-height:1;
+  }
+  .del-btn:active{ color: var(--bug); }
+
+  .drop{
+    position:relative;
+    min-height: 160px;
+    background: var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-dim); font-size:13px;
+    border-bottom: 1px solid var(--line);
+    text-align:center;
+    padding: 14px;
+    cursor:pointer;
+  }
+  .drop.has-img{ padding:0; }
+  .drop img{ width:100%; display:block; max-height:420px; object-fit:contain; background:#0c0d10; }
+  .drop.drag-over{ outline: 2px dashed var(--accent); outline-offset:-6px; }
+  .drop input[type=file]{ display:none; }
+  .drop small{ display:block; margin-top:4px; color:#5a5f6b; }
+
+  .body{ padding:12px; }
+  .status-row{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .status-btn{
+    flex:1; min-width:70px;
+    padding:8px 6px; border-radius:8px; font-size:12px;
+    background: var(--panel-2); color:var(--text-dim); border:1px solid var(--line);
+    text-align:center;
+  }
+  .status-btn.active[data-status="ok"]{ background: rgba(51,193,122,0.15); color: var(--ok); border-color: var(--ok); }
+  .status-btn.active[data-status="bug"]{ background: rgba(239,83,80,0.15); color: var(--bug); border-color: var(--bug); }
+  .status-btn.active[data-status="idea"]{ background: rgba(245,166,35,0.15); color: var(--idea); border-color: var(--idea); }
+  .status-btn.active[data-status="frage"]{ background: rgba(156,124,245,0.15); color: var(--frage); border-color: var(--frage); }
+
+  textarea.note{
+    width:100%; min-height:64px; resize:vertical;
+    background: var(--panel-2); border:1px solid var(--line); border-radius:8px;
+    color:var(--text); font-family:inherit; font-size:13.5px; padding:10px;
+  }
+  textarea.note:focus{ outline:none; border-color:var(--accent); }
+  textarea.note::placeholder{ color:#5a5f6b; }
+
+  .add-card{
+    border:1.5px dashed var(--line); border-radius:14px;
+    padding:20px; text-align:center; color:var(--text-dim);
+    font-size:14px; font-weight:600; margin-bottom:14px;
+  }
+  .add-card:active{ border-color: var(--accent); color: var(--accent); }
+
+  footer{
+    position:fixed; bottom:0; left:0; right:0;
+    background: rgba(20,22,26,0.97);
+    backdrop-filter: blur(8px);
+    border-top:1px solid var(--line);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    display:flex; gap:8px; justify-content:center;
+  }
+  footer button{ flex:1; max-width:220px; }
+
+  .toast{
+    position:fixed; top:66px; left:50%; transform:translateX(-50%);
+    background: var(--panel-2); border:1px solid var(--line);
+    color:var(--text); padding:9px 16px; border-radius:20px;
+    font-size:13px; z-index:50; opacity:0; pointer-events:none;
+    transition: opacity .25s ease;
+  }
+  .toast.show{ opacity:1; }
+
+  .count-badge{
+    font-size:11px; color:var(--text-dim); background:var(--panel-2);
+    border:1px solid var(--line); padding:3px 8px; border-radius:10px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Testlauf Board</h1>
+    <div class="sub"><span id="stepCount">0 Schritte</span> <span id="saveDot" style="opacity:0; transition:opacity .3s ease; color:var(--ok);">● gespeichert</span></div>
+  </div>
+  <div class="header-btns">
+    <button class="btn-danger" id="resetBtn">Neuer Testlauf</button>
+  </div>
+</header>
+
+<main>
+  <div id="emptyState" class="empty">
+    <div class="icon">🧪</div>
+    <div>Noch keine Schritte. Leg unten den ersten Schritt an.</div>
+  </div>
+  <div id="cardsContainer"></div>
+  <div class="add-card" id="addCardBtn">+ Schritt hinzufügen</div>
+</main>
+
+<footer>
+  <button class="btn-primary" id="exportBtn">⬇ Export als ZIP</button>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let steps = [];
+let idCounter = 0;
+const STORAGE_KEY = 'testlauf-board-state';
+let saveTimer = null;
+
+const cardsContainer = document.getElementById('cardsContainer');
+const emptyState = document.getElementById('emptyState');
+const stepCount = document.getElementById('stepCount');
+const toastEl = document.getElementById('toast');
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), 1800);
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 500);
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify({ steps, idCounter }), false);
+    const dot = document.getElementById('saveDot');
+    if(dot){
+      dot.style.opacity = '1';
+      clearTimeout(dot._t);
+      dot._t = setTimeout(()=> dot.style.opacity = '0', 900);
+    }
+  } catch(err){
+    console.error('Speichern fehlgeschlagen:', err);
+  }
+}
+
+async function loadState(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY, false);
+    if(result && result.value){
+      const parsed = JSON.parse(result.value);
+      steps = parsed.steps || [];
+      idCounter = parsed.idCounter || 0;
+    }
+  } catch(err){
+    // kein gespeicherter Stand vorhanden - das ist normal beim ersten Start
+  }
+}
+
+function addStep(){
+  idCounter++;
+  steps.push({
+    id: idCounter,
+    title: 'Schritt ' + steps.length,
+    status: null,
+    note: '',
+    imgData: null,   // base64 dataURL (compressed)
+    imgName: null
+  });
+  render();
+  scheduleSave();
+}
+
+function removeStep(id){
+  steps = steps.filter(s => s.id !== id);
+  render();
+  scheduleSave();
+}
+
+function updateStep(id, patch){
+  const s = steps.find(s => s.id === id);
+  if(s) Object.assign(s, patch);
+  scheduleSave();
+}
+
+function compressImage(file, cb){
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const maxW = 1400;
+      let w = img.width, h = img.height;
+      if(w > maxW){
+        h = Math.round(h * (maxW / w));
+        w = maxW;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      cb(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleFile(id, file){
+  if(!file || !file.type.startsWith('image/')) return;
+  compressImage(file, (dataUrl) => {
+    updateStep(id, { imgData: dataUrl, imgName: 'schritt-' + id + '.jpg' });
+    render();
+  });
+}
+
+function render(){
+  cardsContainer.innerHTML = '';
+  emptyState.style.display = steps.length ? 'none' : 'block';
+  stepCount.textContent = steps.length + (steps.length === 1 ? ' Schritt' : ' Schritte');
+
+  steps.forEach((s, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // head
+    const head = document.createElement('div');
+    head.className = 'card-head';
+    const titleInput = document.createElement('input');
+    titleInput.className = 'title';
+    titleInput.value = s.title;
+    titleInput.addEventListener('input', e => updateStep(s.id, { title: e.target.value }));
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', () => removeStep(s.id));
+    head.appendChild(titleInput);
+    head.appendChild(delBtn);
+
+    // drop zone
+    const drop = document.createElement('div');
+    drop.className = 'drop' + (s.imgData ? ' has-img' : '');
+    if(s.imgData){
+      const img = document.createElement('img');
+      img.src = s.imgData;
+      drop.appendChild(img);
+    } else {
+      drop.innerHTML = '📷 Screenshot einfügen oder klicken<small>Drag & Drop, Datei wählen, oder Strg+V nach Klick</small>';
+    }
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.addEventListener('change', e => {
+      if(e.target.files[0]) handleFile(s.id, e.target.files[0]);
+    });
+    drop.appendChild(fileInput);
+
+    drop.addEventListener('click', (e) => {
+      if(e.target.tagName !== 'IMG') fileInput.click();
+      drop.setAttribute('tabindex', '0');
+      drop.focus();
+    });
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault();
+      drop.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if(file) handleFile(s.id, file);
+    });
+    drop.addEventListener('paste', e => {
+      const items = e.clipboardData.items;
+      for(let item of items){
+        if(item.type.startsWith('image/')){
+          handleFile(s.id, item.getAsFile());
+          break;
+        }
+      }
+    });
+
+    // body: status + note
+    const body = document.createElement('div');
+    body.className = 'body';
+
+    const statusRow = document.createElement('div');
+    statusRow.className = 'status-row';
+    const statuses = [
+      {key:'ok', label:'✅ OK'},
+      {key:'bug', label:'🐛 Bug'},
+      {key:'idea', label:'💡 Idee'},
+      {key:'frage', label:'❓ Frage'}
+    ];
+    statuses.forEach(st => {
+      const btn = document.createElement('div');
+      btn.className = 'status-btn' + (s.status === st.key ? ' active' : '');
+      btn.setAttribute('data-status', st.key);
+      btn.textContent = st.label;
+      btn.addEventListener('click', () => {
+        updateStep(s.id, { status: s.status === st.key ? null : st.key });
+        render();
+      });
+      statusRow.appendChild(btn);
+    });
+
+    const note = document.createElement('textarea');
+    note.className = 'note';
+    note.placeholder = 'Anmerkung, Bug-Beschreibung, was soll passieren vs. was passiert...';
+    note.value = s.note;
+    note.addEventListener('input', e => updateStep(s.id, { note: e.target.value }));
+
+    body.appendChild(statusRow);
+    body.appendChild(note);
+
+    card.appendChild(head);
+    card.appendChild(drop);
+    card.appendChild(body);
+    cardsContainer.appendChild(card);
+  });
+}
+
+document.getElementById('addCardBtn').addEventListener('click', addStep);
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if(steps.length === 0) return;
+  if(confirm('Kompletten Testlauf löschen und neu starten?')){
+    steps = [];
+    idCounter = 0;
+    try{ await window.storage.delete(STORAGE_KEY, false); } catch(err){}
+    render();
+    addStep();
+    showToast('Neuer Testlauf gestartet');
+  }
+});
+
+const statusLabelMap = { ok: '✅ OK', bug: '🐛 Bug', idea: '💡 Idee', frage: '❓ Frage', null: '— offen' };
+
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  if(steps.length === 0){
+    showToast('Keine Schritte zum Exportieren');
+    return;
+  }
+  const exportBtn = document.getElementById('exportBtn');
+  exportBtn.textContent = 'Exportiere...';
+  exportBtn.disabled = true;
+
+  try{
+    const zip = new JSZip();
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0,16).replace('T', '_').replace(':','-');
+
+    let md = '# Testlauf ' + dateStr + '\n\n';
+    md += steps.length + ' Schritte\n\n---\n\n';
+
+    steps.forEach((s, idx) => {
+      const n = idx + 1;
+      md += '## ' + n + '. ' + s.title + '\n\n';
+      md += '**Status:** ' + (statusLabelMap[s.status] || '— offen') + '\n\n';
+      if(s.note && s.note.trim()){
+        md += '**Notiz:** ' + s.note.trim() + '\n\n';
+      }
+      if(s.imgData){
+        const fname = String(n).padStart(2,'0') + '-' + s.title.replace(/[^a-z0-9äöüß\-_]/gi,'_') + '.jpg';
+        md += '![' + s.title + '](./bilder/' + fname + ')\n\n';
+        const base64 = s.imgData.split(',')[1];
+        zip.folder('bilder').file(fname, base64, {base64: true});
+      } else {
+        md += '_(kein Screenshot)_\n\n';
+      }
+      md += '---\n\n';
+    });
+
+    zip.file('testlauf.md', md);
+
+    const blob = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'testlauf_' + dateStr + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('ZIP exportiert ✓');
+  } catch(err){
+    console.error(err);
+    showToast('Fehler beim Export');
+  } finally {
+    exportBtn.textContent = '⬇ Export als ZIP';
+    exportBtn.disabled = false;
+  }
+});
+
+// Beim Start: gespeicherten Testlauf laden, oder mit einem leeren Schritt starten
+(async function init(){
+  await loadState();
+  if(steps.length === 0){
+    addStep();
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>
