@@ -123,6 +123,10 @@ body{font-family:'Inter',sans-serif;background:#0d1017;color:#f0f2f8;overflow:hi
         <label class="modal-check"><input type="checkbox" id="ed-oeffentlich"> Öffentlich</label>
       </div>
       <div class="modal-field"><label>Beschreibung</label><textarea id="ed-beschreibung"></textarea></div>
+      <div class="modal-field">
+        <label>⬜ Offene Punkte <span style="color:#8b92b0;font-weight:400">(eine Zeile = ein Punkt)</span></label>
+        <textarea id="ed-offene_punkte" style="min-height:90px;border-color:#ef444466"></textarea>
+      </div>
       <div class="modal-field"><label>Notizen</label><textarea id="ed-notizen"></textarea></div>
       <div class="modal-field"><label>Memo</label><textarea id="ed-memo"></textarea></div>
       <div class="modal-field"><label>Stripe Info (JSON)</label><textarea id="ed-stripe_info"></textarea></div>
@@ -215,7 +219,7 @@ function loadData() {
     return;
   }
 
-  fetch(SB_URL + '/rest/v1/rc_projekte?select=id,name,repo,brand,status,live_url,hat_supabase,hat_stripe,stripe_info,tags,sort_order,notizen,extra_links,memo,oeffentlich,beschreibung&order=sort_order', {
+  fetch(SB_URL + '/rest/v1/rc_projekte?select=id,name,repo,brand,status,live_url,hat_supabase,hat_stripe,stripe_info,tags,sort_order,notizen,extra_links,memo,oeffentlich,beschreibung,offene_punkte&order=sort_order', {
     headers: getHeaders()
   })
   .then(function(r) { return r.json(); })
@@ -594,6 +598,23 @@ function drawNode(key, pos) {
     ctx.fillText('NEU',s.x+pw/2-bBw/2-3*scale,s.y-ph/2+3*scale+bBh/2);
   }
 
+  // P1 open items badge (top-left corner)
+  if (p.offene_punkte) {
+    var lines = p.offene_punkte.split('\n').filter(function(l){return l.trim().length>0;});
+    if (lines.length > 0) {
+      var pr2 = 9*scale;
+      var px2 = s.x - pw/2 + pr2 + 1*scale;
+      var py2 = s.y - ph/2 + pr2 + 1*scale;
+      ctx.beginPath(); ctx.arc(px2, py2, pr2, 0, Math.PI*2);
+      ctx.fillStyle = '#ef4444';
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold '+(lines.length>9?7:8)*scale+'px Inter';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(lines.length > 9 ? '9+' : String(lines.length), px2, py2+0.5*scale);
+    }
+  }
+
   // Edit pencil icon (bottom-right corner)
   var pr = 9*scale;
   var pcx = s.x+pw/2-pr-2*scale, pcy = s.y+ph/2-pr-2*scale;
@@ -810,7 +831,15 @@ function showTip(e,p,hub) {
       (p.live_url?'<span style="font-size:10px;color:#8b92b0">↗ öffnet GitHub Pages</span>':'<span style="font-size:10px;color:#6b7280">kein Link</span>')+
     '</div>'+
     (p.tags&&p.tags.length?'<div class="tip-tags">'+p.tags.map(function(t){return'<span class="tip-tag">'+t+'</span>';}).join('')+'</div>':'')+
-    (icons.length?'<div class="tip-icons">'+icons.map(function(ic){return'<span>'+ic+'</span>';}).join('')+'</div>':'');
+    (icons.length?'<div class="tip-icons">'+icons.map(function(ic){return'<span>'+ic+'</span>';}).join('')+'</div>':'')+
+    (p.offene_punkte ? (function(){
+      var ls = p.offene_punkte.split('\n').filter(function(l){return l.trim().length>0;});
+      if (!ls.length) return '';
+      return '<div style="margin-top:8px;padding-top:7px;border-top:1px solid #2d3450">'+
+        '<div style="font-size:10px;font-weight:700;color:#ef4444;margin-bottom:4px">⬜ '+ls.length+' offen</div>'+
+        ls.map(function(l){return'<div style="font-size:10px;color:#f87171;padding:1px 0">• '+l.trim()+'</div>';}).join('')+
+      '</div>';
+    })() : '');
 
   var tx=e.clientX+16, ty=e.clientY+10;
   if(tx+280>W) tx=e.clientX-290;
@@ -841,6 +870,7 @@ function openEditModal(p) {
   document.getElementById('ed-hat_stripe').checked = !!p.hat_stripe;
   document.getElementById('ed-oeffentlich').checked = !!p.oeffentlich;
   document.getElementById('ed-beschreibung').value = p.beschreibung || '';
+  document.getElementById('ed-offene_punkte').value = p.offene_punkte || '';
   document.getElementById('ed-notizen').value = p.notizen || '';
   document.getElementById('ed-memo').value = p.memo || '';
   document.getElementById('ed-stripe_info').value = p.stripe_info ? (typeof p.stripe_info==='string'?p.stripe_info:JSON.stringify(p.stripe_info)) : '';
@@ -889,6 +919,7 @@ function saveEdit() {
     hat_stripe: document.getElementById('ed-hat_stripe').checked,
     oeffentlich: document.getElementById('ed-oeffentlich').checked,
     beschreibung: document.getElementById('ed-beschreibung').value,
+    offene_punkte: document.getElementById('ed-offene_punkte').value || null,
     notizen: document.getElementById('ed-notizen').value,
     memo: document.getElementById('ed-memo').value
   };
