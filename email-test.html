@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rc-digital · E-Mail Test</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0 }
+  body { font-family: Arial, sans-serif; background: #0f1117; color: #e5e7eb; min-height: 100vh; padding: 24px 16px }
+  h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px }
+  .sub { font-size: 13px; color: #9ca3af; margin-bottom: 28px }
+  .card { background: #1e2130; border: 1px solid #2d3148; border-radius: 12px; padding: 24px; max-width: 480px; margin: 0 auto }
+  label { font-size: 12px; font-weight: 700; letter-spacing: .5px; color: #9ca3af; text-transform: uppercase; display: block; margin-bottom: 6px; margin-top: 16px }
+  input, select { width: 100%; padding: 12px 14px; background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; color: #e5e7eb; font-size: 14px; outline: none }
+  input:focus, select:focus { border-color: #f59e0b }
+  select option { background: #1e2130}
+  .btn { width: 100%; margin-top: 24px; background: #f59e0b; color: #000; font-weight: 800; font-size: 15px; border: none; border-radius: 8px; padding: 14px; cursor: pointer; transition: opacity .15s }
+  .btn:active { opacity: .75 }
+  .btn:disabled { opacity: .4; cursor: not-allowed }
+  .result { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; display: none }
+  .result.ok { background: #14532d; border: 1px solid #22c55e; color: #86efac }
+  .result.err { background: #450a0a; border: 1px solid #ef4444; color: #fca5a5 }
+  .result.show { display: block }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.3); border-top-color: #000; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px }
+  @keyframes spin { to { transform: rotate(360deg) } }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>✉️ E-Mail Test</h1>
+  <p class="sub">rc-digital · Post-Purchase E-Mail testen</p>
+
+  <label>Supabase Anon Key</label>
+  <input type="password" id="anonKey" placeholder="eyJ…">
+
+  <label>Empfänger E-Mail</label>
+  <input type="email" id="toEmail" placeholder="u.riedel@riedel-classics.de" value="u.riedel@riedel-classics.de">
+
+  <label>Tool</label>
+  <select id="tool">
+    <option value="anzeigenautopilot">✈️ AnzeigenAutopilot</option>
+    <option value="backki">🥐 BackKI</option>
+    <option value="betriebspass">🔐 Betriebspass</option>
+    <option value="wertdossier">🏎️ RC Klassiker Wertdossier</option>
+    <option value="hucheck" selected>🔧 HU-Vorab-Check</option>
+    <option value="crashguide">🚗 CrashGuide</option>
+    <option value="schadencheck">🔍 Schaden-Check</option>
+  </select>
+
+  <label>Testbetrag</label>
+  <input type="text" id="betrag" value="4,99 EUR">
+
+  <button class="btn" id="sendBtn" onclick="sendTest()">📨 Test-E-Mail senden</button>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+async function sendTest() {
+  var key = document.getElementById('anonKey').value.trim();
+  var to = document.getElementById('toEmail').value.trim();
+  var tool = document.getElementById('tool').value;
+  var betrag = document.getElementById('betrag').value.trim();
+  var btn = document.getElementById('sendBtn');
+  var res = document.getElementById('result');
+
+  if (!key) { showResult('err', '⚠️ Bitte Supabase Anon Key eingeben.'); return; }
+  if (!to) { showResult('err', '⚠️ Bitte Empfänger-E-Mail eingeben.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Wird gesendet…';
+  res.className = 'result';
+
+  var data = { betrag: betrag };
+  if (tool === 'anzeigenautopilot') {
+    data.paket = 'Standard (40 Credits)';
+    data.credits = '40';
+  }
+
+  try {
+    var r = await fetch('https://ysqzdqazcgyuzdorauiq.supabase.co/functions/v1/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({ to: to, tool: tool, data: data })
+    });
+    var json = await r.json();
+    if (r.ok && json.success) {
+      showResult('ok', '✅ E-Mail erfolgreich gesendet an ' + to + ' — bitte Posteingang prüfen!');
+    } else {
+      showResult('err', '❌ Fehler: ' + (json.error || JSON.stringify(json)));
+    }
+  } catch(e) {
+    showResult('err', '❌ Netzwerkfehler: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📨 Test-E-Mail senden';
+}
+
+function showResult(type, msg) {
+  var el = document.getElementById('result');
+  el.textContent = msg;
+  el.className = 'result ' + type + ' show';
+}
+</script>
+</body>
+</html>
