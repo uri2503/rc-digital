@@ -18,6 +18,7 @@
     --progress: #fbbf24;
     --planned: #60a5fa;
     --accent: #7c9dff;
+    --danger: #f87171;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -33,7 +34,7 @@
   .subtitle { color: var(--muted); font-size: 0.92rem; margin-top: 0.4rem; }
 
   .overview {
-    max-width: 1400px; margin: 0 auto 2rem;
+    max-width: 1400px; margin: 0 auto 1.25rem;
     display: flex; gap: 0.75rem; flex-wrap: wrap;
   }
   .overview-pill {
@@ -43,6 +44,25 @@
   }
   .overview-pill b { color: var(--text); font-size: 0.95rem; }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .filter-bar {
+    max-width: 1400px; margin: 0 auto 2rem;
+    display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+  }
+  .filter-label { font-size: 0.78rem; color: var(--muted2); margin-right: 0.3rem; }
+  .filter-chip {
+    display: flex; align-items: center; gap: 0.4rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: 100px;
+    padding: 0.4rem 0.8rem 0.4rem 0.6rem; font-size: 0.8rem; cursor: pointer;
+    color: var(--muted); transition: all 0.15s; user-select: none;
+  }
+  .filter-chip.active { color: var(--text); border-color: var(--accent); }
+  .filter-chip .chip-dot { width: 7px; height: 7px; border-radius: 50%; opacity: 0.35; flex-shrink: 0; }
+  .filter-chip.active .chip-dot { opacity: 1; }
+  .filter-chip-all {
+    font-size: 0.78rem; color: var(--accent); cursor: pointer; padding: 0.4rem 0.6rem;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
 
   .grid {
     max-width: 1400px; margin: 0 auto;
@@ -71,13 +91,15 @@
   .status-progress { background: rgba(251,191,36,0.15); color: var(--progress); }
   .status-planned { background: rgba(96,165,250,0.15); color: var(--planned); }
 
-  .checklist { display: flex; flex-direction: column; gap: 0.4rem; }
+  .checklist { display: flex; flex-direction: column; gap: 0.2rem; }
   .check-item {
     display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.45rem 0.5rem;
-    border-radius: 8px; cursor: pointer; transition: background 0.15s;
-    font-size: 0.85rem;
+    border-radius: 8px; transition: background 0.15s;
+    font-size: 0.85rem; position: relative;
   }
   .check-item:hover { background: rgba(255,255,255,0.03); }
+  .check-item:hover .del-btn { opacity: 1; }
+  .check-item label { display: flex; align-items: flex-start; gap: 0.6rem; flex: 1; cursor: pointer; min-width: 0; }
   .check-item input {
     appearance: none; -webkit-appearance: none;
     width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid var(--muted2);
@@ -89,8 +111,31 @@
     content: ''; position: absolute; left: 5px; top: 1px; width: 4px; height: 9px;
     border: solid var(--bg2); border-width: 0 2px 2px 0; transform: rotate(45deg);
   }
-  .check-label { color: var(--text); }
+  .check-label { color: var(--text); word-break: break-word; }
   .check-item input:checked ~ .check-label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--muted2); }
+  .del-btn {
+    opacity: 0; flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted2); cursor: pointer; font-size: 0.9rem; transition: opacity 0.15s, background 0.15s, color 0.15s;
+    background: none; border: none;
+  }
+  .del-btn:hover { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+  .add-item-row {
+    display: flex; gap: 0.4rem; margin-top: 0.2rem;
+  }
+  .add-item-row input {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.5rem 0.65rem; font-size: 0.83rem; color: var(--text);
+    outline: none;
+  }
+  .add-item-row input::placeholder { color: var(--muted2); }
+  .add-item-row input:focus { border-color: var(--accent); }
+  .add-item-row button {
+    background: var(--accent); color: #12141c; border: none; border-radius: 8px;
+    padding: 0 0.9rem; font-size: 0.9rem; font-weight: 700; cursor: pointer; flex-shrink: 0;
+  }
+  .add-item-row button:active { transform: scale(0.96); }
 
   .notes {
     font-size: 0.78rem; color: var(--muted); background: rgba(255,255,255,0.03);
@@ -109,17 +154,18 @@
 <header>
   <p class="eyebrow">rc-digital · Mein-Auto-Assistent Familie</p>
   <h1>Launch-Kontrolle</h1>
-  <p class="subtitle">Status & Testfortschritt aller Tools auf einen Blick. Häkchen werden automatisch gespeichert.</p>
+  <p class="subtitle">Status & Testfortschritt aller Tools auf einen Blick. Alles wird automatisch gespeichert und geräteübergreifend synchronisiert. <span id="syncBadge" style="font-weight:600;"></span></p>
 </header>
 
 <div class="overview" id="overview"></div>
+<div class="filter-bar" id="filterBar"></div>
 
 <div class="grid" id="grid"></div>
 
-<footer>Stand: Juli 2026 · Klick auf ein Häkchen speichert sofort</footer>
+<footer>Stand: Juli 2026 · Klick auf ein Häkchen speichert sofort · Eigene Punkte über das Eingabefeld pro Karte</footer>
 
 <script>
-const TOOLS = [
+const DEFAULT_TOOLS = [
   {
     id: 'betriebspass',
     name: 'Betriebspass',
@@ -217,14 +263,100 @@ const TOOLS = [
   },
 ];
 
-const STORAGE_KEY = 'rc_launch_checklist_state';
+const STORAGE_KEY = 'rc_launch_checklist_state_v2';
+const OLD_STORAGE_KEY = 'rc_launch_checklist_state';
+const SUPA_URL = 'https://ysqzdqazcgyuzdorauiq.supabase.co';
+const SUPA_KEY = 'sb_publishable_v4kXJa0y-2EHsCFPqBFHfg_QvzKLnt2';
+const SUPA_HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+let saveTimer = null;
+let syncStatus = 'idle'; // idle | saving | saved | error
 
 function loadState() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-  catch(e) { return {}; }
+  try {
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Migration vom alten, einfacheren Format (nur Checks, keine eigenen Punkte/Filter)
+      const old = localStorage.getItem(OLD_STORAGE_KEY);
+      if (old) {
+        const oldChecks = JSON.parse(old);
+        const migrated = { checks: oldChecks, customItems: {}, removedDefaults: {}, visibility: {} };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+    }
+    const s = JSON.parse(raw || '{}');
+    if (!s.checks) s.checks = {};
+    if (!s.customItems) s.customItems = {};
+    if (!s.removedDefaults) s.removedDefaults = {};
+    if (!s.visibility) s.visibility = {};
+    return s;
+  } catch(e) {
+    return { checks: {}, customItems: {}, removedDefaults: {}, visibility: {} };
+  }
 }
-function saveState(state) {
+function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  scheduleCloudSave();
+}
+
+function scheduleCloudSave() {
+  syncStatus = 'saving';
+  renderSyncBadge();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(cloudSaveNow, 600);
+}
+
+function cloudSaveNow() {
+  fetch(SUPA_URL + '/rest/v1/rc_dashboard_state?id=eq.main', {
+    method: 'PATCH',
+    headers: { ...SUPA_HEADERS, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ state: state, updated_at: new Date().toISOString() })
+  }).then(r => {
+    syncStatus = r.ok ? 'saved' : 'error';
+    renderSyncBadge();
+  }).catch(() => {
+    syncStatus = 'error';
+    renderSyncBadge();
+  });
+}
+
+function cloudLoadOnce() {
+  fetch(SUPA_URL + '/rest/v1/rc_dashboard_state?id=eq.main&select=state', {
+    headers: SUPA_HEADERS
+  }).then(r => r.json()).then(rows => {
+    if (rows && rows[0] && rows[0].state && Object.keys(rows[0].state).length) {
+      // Cloud-Stand vorhanden -- übernimmt lokalen Stand als aktuelle Wahrheit
+      const cloud = rows[0].state;
+      state = {
+        checks: cloud.checks || {},
+        customItems: cloud.customItems || {},
+        removedDefaults: cloud.removedDefaults || {},
+        visibility: cloud.visibility || {}
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      syncStatus = 'saved';
+      render();
+    } else {
+      // Noch kein Cloud-Stand -- lokalen Stand initial hochladen
+      cloudSaveNow();
+    }
+  }).catch(() => {
+    syncStatus = 'error';
+    renderSyncBadge();
+  });
+}
+
+function renderSyncBadge() {
+  const el = document.getElementById('syncBadge');
+  if (!el) return;
+  const map = {
+    idle: ['●', 'var(--muted2)', 'Bereit'],
+    saving: ['●', 'var(--progress)', 'Speichert…'],
+    saved: ['●', 'var(--live)', 'Synchronisiert'],
+    error: ['●', 'var(--danger)', 'Offline / Fehler — lokal gespeichert']
+  };
+  const [dot, color, label] = map[syncStatus];
+  el.innerHTML = `<span style="color:${color}">${dot}</span> ${label}`;
 }
 
 function esc(s) {
@@ -240,26 +372,83 @@ function statusClass(status) {
 
 let state = loadState();
 
-function getDone(toolId, itemId, fallback) {
-  if (state[toolId] && Object.prototype.hasOwnProperty.call(state[toolId], itemId)) {
-    return state[toolId][itemId];
-  }
-  return fallback;
+function isVisible(toolId) {
+  return state.visibility[toolId] !== false;
 }
-
-function setDone(toolId, itemId, val) {
-  if (!state[toolId]) state[toolId] = {};
-  state[toolId][itemId] = val;
-  saveState(state);
+function toggleVisibility(toolId) {
+  state.visibility[toolId] = !isVisible(toolId);
+  saveState();
+  render();
+}
+function showAll() {
+  DEFAULT_TOOLS.forEach(t => { state.visibility[t.id] = true; });
+  saveState();
   render();
 }
 
-function renderOverview() {
+function getItemsForTool(tool) {
+  const removed = state.removedDefaults[tool.id] || [];
+  const base = tool.items.filter(i => !removed.includes(i.id));
+  const custom = state.customItems[tool.id] || [];
+  return base.concat(custom).map(item => {
+    const overrideDone = state.checks[tool.id] ? state.checks[tool.id][item.id] : undefined;
+    return {
+      id: item.id,
+      label: item.label,
+      done: overrideDone !== undefined ? overrideDone : item.done,
+      isCustom: custom.some(c => c.id === item.id)
+    };
+  });
+}
+
+function setDone(toolId, itemId, val) {
+  if (!state.checks[toolId]) state.checks[toolId] = {};
+  state.checks[toolId][itemId] = val;
+  saveState();
+  render();
+}
+
+function addItem(toolId) {
+  const input = document.getElementById('add-input-' + toolId);
+  const text = input.value.trim();
+  if (!text) return;
+  if (!state.customItems[toolId]) state.customItems[toolId] = [];
+  const newId = 'custom_' + Date.now();
+  state.customItems[toolId].push({ id: newId, label: text, done: false });
+  saveState();
+  render();
+  // Fokus nach Re-Render wiederherstellen
+  setTimeout(() => {
+    const el = document.getElementById('add-input-' + toolId);
+    if (el) el.focus();
+  }, 0);
+}
+
+function removeItem(toolId, itemId, isCustom) {
+  if (isCustom) {
+    state.customItems[toolId] = (state.customItems[toolId] || []).filter(i => i.id !== itemId);
+  } else {
+    if (!state.removedDefaults[toolId]) state.removedDefaults[toolId] = [];
+    if (!state.removedDefaults[toolId].includes(itemId)) state.removedDefaults[toolId].push(itemId);
+  }
+  saveState();
+  render();
+}
+
+function handleAddKeydown(e, toolId) {
+  if (e.key === 'Enter') addItem(toolId);
+}
+
+function renderOverview(visibleTools) {
   const wrap = document.getElementById('overview');
   const counts = { live: 0, progress: 0, planned: 0 };
-  TOOLS.forEach(t => counts[t.status]++);
-  const totalItems = TOOLS.reduce((sum, t) => sum + t.items.length, 0);
-  const doneItems = TOOLS.reduce((sum, t) => sum + t.items.filter(i => getDone(t.id, i.id, i.done)).length, 0);
+  visibleTools.forEach(t => counts[t.status]++);
+  let totalItems = 0, doneItems = 0;
+  visibleTools.forEach(t => {
+    const items = getItemsForTool(t);
+    totalItems += items.length;
+    doneItems += items.filter(i => i.done).length;
+  });
   wrap.innerHTML = `
     <div class="overview-pill"><span class="dot" style="background:var(--live)"></span> ${counts.live} live</div>
     <div class="overview-pill"><span class="dot" style="background:var(--progress)"></span> ${counts.progress} in Testphase</div>
@@ -268,26 +457,50 @@ function renderOverview() {
   `;
 }
 
+function renderFilterBar() {
+  const bar = document.getElementById('filterBar');
+  const chips = DEFAULT_TOOLS.map(tool => {
+    const active = isVisible(tool.id);
+    const color = statusColor(tool.status);
+    return `
+      <div class="filter-chip ${active ? 'active' : ''}" onclick="toggleVisibility('${tool.id}')">
+        <span class="chip-dot" style="background:${color}"></span>
+        ${esc(tool.name)}
+      </div>
+    `;
+  }).join('');
+  bar.innerHTML = `<span class="filter-label">Anzeigen:</span>${chips}<span class="filter-chip-all" onclick="showAll()">Alle einblenden</span>`;
+}
+
 function render() {
-  renderOverview();
+  renderFilterBar();
+  const visibleTools = DEFAULT_TOOLS.filter(t => isVisible(t.id));
+  renderOverview(visibleTools);
+
   const grid = document.getElementById('grid');
-  grid.innerHTML = TOOLS.map(tool => {
-    const total = tool.items.length;
-    const done = tool.items.filter(i => getDone(tool.id, i.id, i.done)).length;
+  if (visibleTools.length === 0) {
+    grid.innerHTML = `<div class="notes" style="grid-column:1/-1;text-align:center;padding:2rem;">Keine Tools ausgewählt — oben in der Filterleiste welche einblenden.</div>`;
+    return;
+  }
+
+  grid.innerHTML = visibleTools.map(tool => {
+    const items = getItemsForTool(tool);
+    const total = items.length;
+    const done = items.filter(i => i.done).length;
     const pct = total ? Math.round((done / total) * 100) : 0;
     const circumference = 2 * Math.PI * 24;
     const offset = circumference - (pct / 100) * circumference;
     const color = statusColor(tool.status);
 
-    const itemsHtml = tool.items.map(item => {
-      const checked = getDone(tool.id, item.id, item.done);
-      return `
-        <label class="check-item">
-          <input type="checkbox" ${checked ? 'checked' : ''} onchange="setDone('${tool.id}','${item.id}', this.checked)">
+    const itemsHtml = items.map(item => `
+      <div class="check-item">
+        <label>
+          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="setDone('${tool.id}','${item.id}', this.checked)">
           <span class="check-label">${esc(item.label)}</span>
         </label>
-      `;
-    }).join('');
+        <button class="del-btn" onclick="removeItem('${tool.id}','${item.id}', ${item.isCustom})" title="Entfernen">✕</button>
+      </div>
+    `).join('');
 
     return `
       <div class="tool-card">
@@ -309,6 +522,10 @@ function render() {
           <span class="status-badge ${statusClass(tool.status)}">${esc(tool.statusLabel)}</span>
         </div>
         <div class="checklist">${itemsHtml}</div>
+        <div class="add-item-row">
+          <input type="text" id="add-input-${tool.id}" placeholder="Eigenen Punkt hinzufügen…" onkeydown="handleAddKeydown(event, '${tool.id}')">
+          <button onclick="addItem('${tool.id}')">+</button>
+        </div>
         ${tool.note ? `<div class="notes">${esc(tool.note)}</div>` : ''}
       </div>
     `;
@@ -316,6 +533,8 @@ function render() {
 }
 
 render();
+renderSyncBadge();
+cloudLoadOnce();
 </script>
 
 </body>
