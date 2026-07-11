@@ -548,6 +548,11 @@ input.doc-file-input { display: none; }
     <!-- TAB: INFO -->
     <div class="panel-tab-content active" id="ptab-info">
       <div class="panel-section">
+        <div class="panel-label">Gruppe</div>
+        <select class="panel-field" id="p-brand" onchange="onBrandSelectChange()"></select>
+        <input type="text" class="panel-field" id="p-brand-new" placeholder="Name der neuen Gruppe" style="display:none;margin-top:0.5rem">
+      </div>
+      <div class="panel-section">
         <div class="panel-label">Status</div>
         <select class="panel-field" id="p-status">
           <option value="live">● Live</option>
@@ -978,6 +983,7 @@ function openPanel(id) {
   switchPanelTab('info');
 
   document.getElementById('panel-name').textContent = p.name || '—';
+  populateBrandOptions(p.brand);
   document.getElementById('p-status').value = p.status || 'wip';
   document.getElementById('p-beschreibung').value = p.beschreibung || '';
   document.getElementById('p-notizen').value = p.notizen || '';
@@ -1014,6 +1020,27 @@ function renderPanelLinks(p) {
   document.getElementById('p-links-list').innerHTML = linksHtml || '<span style="font-size:0.8rem;color:var(--muted)">Keine Links hinterlegt</span>';
 }
 
+function populateBrandOptions(selected) {
+  var brands = {};
+  allProjekte.forEach(function(p) { if (p.brand) brands[p.brand] = true; });
+  if (selected) brands[selected] = true;
+  var list = Object.keys(brands).sort();
+  var html = list.map(function(b) {
+    return '<option value="' + b + '"' + (b === selected ? ' selected' : '') + '>' + b + '</option>';
+  }).join('');
+  html += '<option value="__new__">+ Neue Gruppe…</option>';
+  document.getElementById('p-brand').innerHTML = html;
+  document.getElementById('p-brand-new').style.display = 'none';
+  document.getElementById('p-brand-new').value = '';
+}
+
+function onBrandSelectChange() {
+  var isNew = document.getElementById('p-brand').value === '__new__';
+  var input = document.getElementById('p-brand-new');
+  input.style.display = isNew ? 'block' : 'none';
+  if (isNew) input.focus();
+}
+
 function closePanel(e) {
   if (e.target === document.getElementById('overlay')) closeOverlay();
 }
@@ -1024,7 +1051,16 @@ function closeOverlay() {
 
 function savePanel() {
   if (!currentProjekt) return;
+  var brandValue = document.getElementById('p-brand').value;
+  if (brandValue === '__new__') {
+    brandValue = document.getElementById('p-brand-new').value.trim();
+    if (!brandValue) {
+      document.getElementById('p-brand-new').focus();
+      return;
+    }
+  }
   var updates = {
+    brand:        brandValue,
     status:       document.getElementById('p-status').value,
     oeffentlich:  document.getElementById('p-public').checked,
     beschreibung: document.getElementById('p-beschreibung').value,
@@ -1043,6 +1079,7 @@ function savePanel() {
   .then(function(r) {
     if (r.ok) {
       Object.assign(currentProjekt, updates);
+      populateBrandOptions(currentProjekt.brand);
       renderStats(); renderGrid(); renderPublic();
       var btn = document.getElementById('btn-save');
       btn.textContent = '✓ Gespeichert';
