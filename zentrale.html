@@ -593,7 +593,10 @@ input.doc-file-input { display: none; }
     <div class="panel-tab-content" id="ptab-links">
       <div class="panel-section">
         <div class="panel-label">Live-URL</div>
-        <div id="p-links-list"></div>
+        <div class="panel-link-row">
+          <input type="text" class="panel-field" id="p-live-url" placeholder="Keine Live-URL hinterlegt" style="flex:1" oninput="updateLiveUrlOpenLink()">
+          <a href="#" target="_blank" class="icon-btn" id="p-live-url-open">↗</a>
+        </div>
       </div>
       <div class="panel-section">
         <div class="panel-label">GitHub-Repo (Slug)</div>
@@ -1000,6 +1003,7 @@ function openPanel(id) {
   };
 
   // Links Tab
+  document.getElementById('p-live-url').value = p.live_url || '';
   document.getElementById('p-repo').value = p.repo || '';
   renderPanelLinks(p);
 
@@ -1009,12 +1013,16 @@ function openPanel(id) {
 }
 
 function renderPanelLinks(p) {
-  var linksHtml = '';
-  if (p.live_url) {
-    linksHtml = '<div class="panel-link-row"><a href="' + p.live_url + '" target="_blank" class="panel-link">' + p.live_url + '</a><a href="' + p.live_url + '" target="_blank" class="icon-btn">↗</a></div>';
-  }
-  document.getElementById('p-links-list').innerHTML = linksHtml || '<span style="font-size:0.8rem;color:var(--muted)">Keine Live-URL hinterlegt</span>';
+  updateLiveUrlOpenLink();
   updateRepoOpenLink();
+}
+
+function updateLiveUrlOpenLink() {
+  var url = document.getElementById('p-live-url').value.trim();
+  var link = document.getElementById('p-live-url-open');
+  link.href = url || '#';
+  link.style.opacity = url ? '' : '0.35';
+  link.style.pointerEvents = url ? '' : 'none';
 }
 
 function updateRepoOpenLink() {
@@ -1067,7 +1075,8 @@ function savePanel() {
     oeffentlich:  document.getElementById('p-public').checked,
     beschreibung: document.getElementById('p-beschreibung').value,
     notizen:      document.getElementById('p-notizen').value,
-    repo:         document.getElementById('p-repo').value.trim()
+    repo:         document.getElementById('p-repo').value.trim(),
+    live_url:     document.getElementById('p-live-url').value.trim()
   };
   fetch(SUPABASE_URL + '/rest/v1/rc_projekte?id=eq.' + currentProjekt.id, {
     method: 'PATCH',
