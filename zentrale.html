@@ -590,6 +590,11 @@ input.doc-file-input { display: none; }
         <div class="panel-label">Live-URL & GitHub</div>
         <div id="p-links-list"></div>
       </div>
+      <div class="panel-section">
+        <div class="panel-label">GitHub-Repo (Slug)</div>
+        <input type="text" class="panel-field" id="p-repo" placeholder="repo-name">
+        <button class="doc-save-btn" id="btn-repo-save" onclick="saveRepo()" style="margin-top:0.6rem">Repo speichern</button>
+      </div>
     </div>
 
   </div>
@@ -987,6 +992,17 @@ function openPanel(id) {
   };
 
   // Links Tab
+  renderPanelLinks(p);
+  document.getElementById('p-repo').value = p.repo || '';
+  document.getElementById('btn-repo-save').textContent = 'Repo speichern';
+  document.getElementById('btn-repo-save').className = 'doc-save-btn';
+
+  document.getElementById('btn-save').textContent = 'Speichern';
+  document.getElementById('btn-save').className = 'btn-save';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function renderPanelLinks(p) {
   var linksHtml = '';
   if (p.live_url) {
     linksHtml += '<div class="panel-link-row"><a href="' + p.live_url + '" target="_blank" class="panel-link">' + p.live_url + '</a><a href="' + p.live_url + '" target="_blank" class="icon-btn">↗</a></div>';
@@ -996,10 +1012,6 @@ function openPanel(id) {
     linksHtml += '<div class="panel-link-row" style="margin-top:0.4rem"><a href="' + ghUrl + '" target="_blank" class="panel-link">github.com/uri2503/' + p.repo + '</a><a href="' + ghUrl + '" target="_blank" class="icon-btn">↗</a></div>';
   }
   document.getElementById('p-links-list').innerHTML = linksHtml || '<span style="font-size:0.8rem;color:var(--muted)">Keine Links hinterlegt</span>';
-
-  document.getElementById('btn-save').textContent = 'Speichern';
-  document.getElementById('btn-save').className = 'btn-save';
-  document.getElementById('overlay').classList.add('open');
 }
 
 function closePanel(e) {
@@ -1036,6 +1048,33 @@ function savePanel() {
       btn.textContent = '✓ Gespeichert';
       btn.classList.add('saved');
       setTimeout(function() { btn.textContent = 'Speichern'; btn.classList.remove('saved'); }, 2000);
+    }
+  })
+  .catch(function(e) { console.error(e); });
+}
+
+function saveRepo() {
+  if (!currentProjekt) return;
+  var updates = { repo: document.getElementById('p-repo').value.trim() };
+  fetch(SUPABASE_URL + '/rest/v1/rc_projekte?id=eq.' + currentProjekt.id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(updates)
+  })
+  .then(function(r) {
+    if (r.ok) {
+      Object.assign(currentProjekt, updates);
+      renderPanelLinks(currentProjekt);
+      renderStats(); renderGrid(); renderPublic();
+      var btn = document.getElementById('btn-repo-save');
+      btn.textContent = '✓ Gespeichert';
+      btn.classList.add('saved');
+      setTimeout(function() { btn.textContent = 'Repo speichern'; btn.classList.remove('saved'); }, 2000);
     }
   })
   .catch(function(e) { console.error(e); });
