@@ -668,12 +668,35 @@ function loadProjekte() {
   grid.innerHTML = '<div class="empty-state"><div class="big">⏳</div><p>Synchronisiere mit GitHub…</p></div>';
 
   // 1. Alle GitHub Repos laden (bis 100)
+  var ghHeaders = { 'Accept': 'application/vnd.github.v3+json' };
+  if (GITHUB_TOKEN) ghHeaders['Authorization'] = 'token ' + GITHUB_TOKEN;
+
   fetch('https://api.github.com/users/' + GITHUB_USER + '/repos?per_page=100&type=all', {
-    headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+    headers: ghHeaders
   })
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    if (!r.ok) {
+      return r.text().then(function(body) {
+        var message = body;
+        try { message = JSON.parse(body).message; } catch (e) {}
+        var err = new Error('GitHub API Fehler ' + r.status + ': ' + message);
+        err.githubError = true;
+        err.status = r.status;
+        err.message = message;
+        throw err;
+      });
+    }
+    return r.json();
+  })
   .then(function(ghRepos) {
     var ghNames = ghRepos.map(function(r) { return r.name; });
+
+    var ghWarnMsg = null;
+    if (!GITHUB_TOKEN) {
+      ghWarnMsg = '⚠️ Kein GitHub-Token gesetzt — nur ' + ghRepos.length + ' öffentliche Repos geladen. Private Repos fehlen! Token über 🔑 hinterlegen.';
+    } else if (ghRepos.length >= 100) {
+      ghWarnMsg = '⚠️ GitHub lieferte ' + ghRepos.length + ' Repos (Limit erreicht) — evtl. fehlen weitere. Pagination prüfen.';
+    }
 
     // 2. Supabase laden
     return fetch(SUPABASE_URL + '/rest/v1/rc_projekte?select=*&order=sort_order.asc', {
@@ -692,6 +715,7 @@ function loadProjekte() {
       if (neueRepos.length === 0) {
         allProjekte = projekte;
         renderStats(); renderGrid(); renderPublic();
+        if (ghWarnMsg) showSyncToast(ghRepos.length, ghWarnMsg);
         return;
       }
 
@@ -732,6 +756,7 @@ function loadProjekte() {
         renderStats(); renderGrid(); renderPublic();
         // Kurze Sync-Meldung anzeigen
         showSyncToast(neueRepos.length);
+        if (ghWarnMsg) showSyncToast(ghRepos.length, ghWarnMsg);
       });
     });
   })
@@ -745,17 +770,22 @@ function loadProjekte() {
     .then(function(data) {
       allProjekte = Array.isArray(data) ? data : [];
       renderStats(); renderGrid(); renderPublic();
-      grid.innerHTML += '';
+      var warnMsg = (e && e.githubError)
+        ? '⚠️ GitHub-Sync fehlgeschlagen (' + e.status + '): ' + e.message + ' — zeige nur gespeicherte Projekte.'
+        : '⚠️ GitHub-Sync fehlgeschlagen — zeige nur gespeicherte Projekte.';
+      showSyncToast(0, warnMsg);
     });
   });
 }
 
 function showSyncToast(count, msg) {
+  var text = msg || ('✓ ' + count + ' neue Repo(s) aus GitHub synchronisiert');
+  var isWarning = text.indexOf('⚠️') === 0;
   var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:0.6rem 1.2rem;border-radius:8px;font-size:0.82rem;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3)';
-  t.textContent = msg || ('✓ ' + count + ' neue Repo(s) aus GitHub synchronisiert');
+  t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:' + (isWarning ? '#f59e0b' : '#22c55e') + ';color:' + (isWarning ? '#12141c' : '#fff') + ';padding:0.6rem 1.2rem;border-radius:8px;font-size:0.82rem;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3)';
+  t.textContent = text;
   document.body.appendChild(t);
-  setTimeout(function() { t.remove(); }, 4000);
+  setTimeout(function() { t.remove(); }, isWarning ? 8000 : 4000);
 }
 
 // ── STATS ──
