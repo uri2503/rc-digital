@@ -510,6 +510,9 @@ input.doc-file-input { display: none; }
     <button class="filter-chip" onclick="setFilter('stripe')">💳 Stripe</button>
     <button class="filter-chip" onclick="setFilter('supabase')">⚡ Supabase</button>
     <button class="filter-chip" onclick="setFilter('public')">🌐 Öffentlich</button>
+    <select class="filter-chip" id="group-filter" onchange="setGroupFilter(this.value)" style="margin-left:auto">
+      <option value="">Alle Gruppen</option>
+    </select>
   </div>
 
   <!-- STATS -->
@@ -572,6 +575,10 @@ input.doc-file-input { display: none; }
         </div>
       </div>
       <div class="panel-section">
+        <div class="panel-label">Icon (Emoji)</div>
+        <input type="text" class="panel-field" id="p-icon" placeholder="z.B. 🔧 🚗 📋">
+      </div>
+      <div class="panel-section">
         <div class="panel-label">Beschreibung (öffentlich)</div>
         <textarea class="panel-field" id="p-beschreibung" placeholder="Was macht dieses Tool? Für wen?"></textarea>
       </div>
@@ -593,7 +600,10 @@ input.doc-file-input { display: none; }
     <div class="panel-tab-content" id="ptab-links">
       <div class="panel-section">
         <div class="panel-label">Live-URL</div>
-        <div id="p-links-list"></div>
+        <div class="panel-link-row">
+          <input type="text" class="panel-field" id="p-live-url" placeholder="Keine Live-URL hinterlegt" style="flex:1" oninput="updateLiveUrlOpenLink()">
+          <a href="#" target="_blank" class="icon-btn" id="p-live-url-open">↗</a>
+        </div>
       </div>
       <div class="panel-section">
         <div class="panel-label">GitHub-Repo (Slug)</div>
@@ -615,6 +625,7 @@ var PIN = '2503';
 var allProjekte = [];
 var currentFilter = 'alle';
 var currentSearch = '';
+var currentGroupFilter = '';
 var currentProjekt = null;
 var currentView = 'intern';
 
@@ -729,6 +740,7 @@ function loadProjekte() {
 
       if (neueRepos.length === 0) {
         allProjekte = projekte;
+        populateGroupFilterOptions();
         renderStats(); renderGrid(); renderPublic();
         if (ghWarnMsg) showSyncToast(ghRepos.length, ghWarnMsg);
         return;
@@ -771,6 +783,7 @@ function loadProjekte() {
         allProjekte = Array.isArray(data) ? data : [];
         var syncMsg = neueRepos.length + ' neue Repo(s) synchronisiert: ' + neueRepos.map(function(r){return r.name;}).join(', ');
         console.log(syncMsg);
+        populateGroupFilterOptions();
         renderStats(); renderGrid(); renderPublic();
         // Kurze Sync-Meldung anzeigen
         showSyncToast(neueRepos.length);
@@ -787,6 +800,7 @@ function loadProjekte() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       allProjekte = Array.isArray(data) ? data : [];
+      populateGroupFilterOptions();
       renderStats(); renderGrid(); renderPublic();
       var warnMsg = (e && e.githubError)
         ? '⚠️ GitHub-Sync fehlgeschlagen (' + e.status + '): ' + e.message + ' — zeige nur gespeicherte Projekte.'
@@ -808,13 +822,14 @@ function showSyncToast(count, msg) {
 
 // ── STATS ──
 function renderStats() {
-  var live = allProjekte.filter(function(p) { return p.status === 'live'; }).length;
-  var wip  = allProjekte.filter(function(p) { return p.status === 'wip'; }).length;
-  var stripe = allProjekte.filter(function(p) { return p.hat_stripe; }).length;
-  var pub  = allProjekte.filter(function(p) { return p.oeffentlich; }).length;
+  var basis = filtered();
+  var live = basis.filter(function(p) { return p.status === 'live'; }).length;
+  var wip  = basis.filter(function(p) { return p.status === 'wip'; }).length;
+  var stripe = basis.filter(function(p) { return p.hat_stripe; }).length;
+  var pub  = basis.filter(function(p) { return p.oeffentlich; }).length;
 
   document.getElementById('stats-row').innerHTML =
-    statBox(allProjekte.length, 'Projekte gesamt') +
+    statBox(basis.length, 'Projekte gesamt') +
     statBox(live, '● Live') +
     statBox(wip, '◐ In Arbeit') +
     statBox(stripe, '💳 Mit Stripe') +
@@ -831,11 +846,38 @@ function setFilter(f) {
   document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
   event.target.classList.add('active');
   renderGrid();
+  renderStats();
+}
+
+function setGroupFilter(brand) {
+  currentGroupFilter = brand;
+  renderGrid();
+  renderStats();
+}
+
+function populateGroupFilterOptions() {
+  var brands = {};
+  allProjekte.forEach(function(p) { if (p.brand) brands[p.brand] = true; });
+  var list = Object.keys(brands).sort();
+  var sel = document.getElementById('group-filter');
+  var previous = currentGroupFilter;
+  var html = '<option value="">Alle Gruppen</option>';
+  html += list.map(function(b) {
+    return '<option value="' + b + '">' + b.toUpperCase() + '</option>';
+  }).join('');
+  sel.innerHTML = html;
+  if (list.indexOf(previous) !== -1) {
+    sel.value = previous;
+  } else {
+    currentGroupFilter = '';
+    sel.value = '';
+  }
 }
 
 document.getElementById('search-input').addEventListener('input', function(e) {
   currentSearch = e.target.value.toLowerCase();
   renderGrid();
+  renderStats();
 });
 
 function filtered() {
@@ -849,12 +891,17 @@ function filtered() {
     if (currentFilter === 'supabase') matchFilter = p.hat_supabase;
     if (currentFilter === 'public')   matchFilter = p.oeffentlich;
 
+    var matchGroup = true;
+    if (currentGroupFilter) {
+      matchGroup = p.brand === currentGroupFilter;
+    }
+
     var matchSearch = true;
     if (currentSearch) {
       var hay = ((p.name || '') + ' ' + (p.brand || '') + ' ' + (p.tags || []).join(' ')).toLowerCase();
       matchSearch = hay.indexOf(currentSearch) !== -1;
     }
-    return matchFilter && matchSearch;
+    return matchFilter && matchGroup && matchSearch;
   });
 }
 
@@ -987,6 +1034,7 @@ function openPanel(id) {
   document.getElementById('panel-name').textContent = p.name || '—';
   populateBrandOptions(p.brand);
   document.getElementById('p-status').value = p.status || 'wip';
+  document.getElementById('p-icon').value = p.icon || '';
   document.getElementById('p-beschreibung').value = p.beschreibung || '';
   document.getElementById('p-notizen').value = p.notizen || '';
 
@@ -1000,6 +1048,7 @@ function openPanel(id) {
   };
 
   // Links Tab
+  document.getElementById('p-live-url').value = p.live_url || '';
   document.getElementById('p-repo').value = p.repo || '';
   renderPanelLinks(p);
 
@@ -1009,12 +1058,16 @@ function openPanel(id) {
 }
 
 function renderPanelLinks(p) {
-  var linksHtml = '';
-  if (p.live_url) {
-    linksHtml = '<div class="panel-link-row"><a href="' + p.live_url + '" target="_blank" class="panel-link">' + p.live_url + '</a><a href="' + p.live_url + '" target="_blank" class="icon-btn">↗</a></div>';
-  }
-  document.getElementById('p-links-list').innerHTML = linksHtml || '<span style="font-size:0.8rem;color:var(--muted)">Keine Live-URL hinterlegt</span>';
+  updateLiveUrlOpenLink();
   updateRepoOpenLink();
+}
+
+function updateLiveUrlOpenLink() {
+  var url = document.getElementById('p-live-url').value.trim();
+  var link = document.getElementById('p-live-url-open');
+  link.href = url || '#';
+  link.style.opacity = url ? '' : '0.35';
+  link.style.pointerEvents = url ? '' : 'none';
 }
 
 function updateRepoOpenLink() {
@@ -1065,9 +1118,11 @@ function savePanel() {
     brand:        brandValue,
     status:       document.getElementById('p-status').value,
     oeffentlich:  document.getElementById('p-public').checked,
+    icon:         document.getElementById('p-icon').value.trim(),
     beschreibung: document.getElementById('p-beschreibung').value,
     notizen:      document.getElementById('p-notizen').value,
-    repo:         document.getElementById('p-repo').value.trim()
+    repo:         document.getElementById('p-repo').value.trim(),
+    live_url:     document.getElementById('p-live-url').value.trim()
   };
   fetch(SUPABASE_URL + '/rest/v1/rc_projekte?id=eq.' + currentProjekt.id, {
     method: 'PATCH',
@@ -1084,6 +1139,7 @@ function savePanel() {
       Object.assign(currentProjekt, updates);
       populateBrandOptions(currentProjekt.brand);
       renderPanelLinks(currentProjekt);
+      populateGroupFilterOptions();
       renderStats(); renderGrid(); renderPublic();
       var btn = document.getElementById('btn-save');
       btn.textContent = '✓ Gespeichert';

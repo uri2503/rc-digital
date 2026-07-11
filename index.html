@@ -215,6 +215,7 @@
   .status-pre    { background: rgba(99,102,241,0.12); color: var(--pre);    border: 1px solid rgba(99,102,241,0.25); }
   .status-intern { background: rgba(100,116,139,0.12);color: var(--intern); border: 1px solid rgba(100,116,139,0.25); }
   .status-proto  { background: rgba(139,92,246,0.12); color: var(--proto);  border: 1px solid rgba(139,92,246,0.25); }
+  .status-pause  { background: rgba(100,116,139,0.12);color: var(--intern); border: 1px solid rgba(100,116,139,0.25); }
 
   .card-name {
     font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em;
@@ -443,136 +444,8 @@
     nicht am grünen Tisch.
   </p>
 
-  <div class="tools-grid">
-
-    <a href="https://backki-app.de" target="_blank" rel="noopener" class="tool-card">
-      <div class="card-top">
-        <div class="card-icon">🥐</div>
-        <span class="status-badge status-live">Live</span>
-      </div>
-      <div>
-        <div class="card-name">BackKI</div>
-        <div class="card-target">Bäckereien</div>
-      </div>
-      <p class="card-desc">KI-gestützte Retourenanalyse. Täglich erfassen, wöchentlich auswerten — und wissen, wo Teig, Energie und Marge verloren gehen.</p>
-      <div class="card-footer">
-        <span class="card-price">29 € / Analyse-Report</span>
-        <span class="card-link">backki-app.de <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </a>
-
-    <div class="tool-card locked" onclick="showStop('GTÜ HU-Vorab-Check')" role="button" tabindex="0">
-      <div class="card-top">
-        <div class="card-icon">🔧</div>
-        <span class="status-badge status-pilot">Pilot</span>
-      </div>
-      <div>
-        <div class="card-name">GTÜ HU-Vorab-Check</div>
-        <div class="card-target">KFZ-Halter</div>
-      </div>
-      <p class="card-desc">Digitale Checkliste zur HU-Vorbereitung. Kennzeichen eingeben — KI bewertet den wahrscheinlichen Prüfstatus anhand Fahrzeugdaten.</p>
-      <div class="card-footer">
-        <span class="card-price">Pilotbetrieb</span>
-        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </div>
-
-    <a href="https://uri2503.github.io/betriebspass" target="_blank" rel="noopener" class="tool-card">
-      <div class="card-top">
-        <div class="card-icon">📋</div>
-        <span class="status-badge status-pre">Pre-Launch</span>
-      </div>
-      <div>
-        <div class="card-name">Betriebspass</div>
-        <div class="card-target">Selbständige & Einzelunternehmen</div>
-      </div>
-      <p class="card-desc">Digitale Betriebskontinuität für Soloselbständige. Zugänge, Verträge, Notfallkontakte — sicher hinterlegt, sofort abrufbar.</p>
-      <div class="card-footer">
-        <span class="card-price">39 € einmalig</span>
-        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </a>
-
-    <div class="tool-card locked" onclick="showStop('BauDesk')" role="button" tabindex="0">
-      <div class="card-top">
-        <div class="card-icon">⚡</div>
-        <span class="status-badge status-proto">Prototyp</span>
-      </div>
-      <div>
-        <div class="card-name">BauDesk</div>
-        <div class="card-target">Elektriker & Handwerksbetriebe</div>
-      </div>
-      <p class="card-desc">Digitale Baustelle: Stempeluhr, Tagesrapport, Rechnungsübersicht und PDF-Export — ohne Papier, ohne Medienbruch.</p>
-      <div class="card-footer">
-        <span class="card-price">ab 59 € / Monat</span>
-        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </div>
-
-    <div class="tool-card locked" onclick="showStop('CrashGuide')" role="button" tabindex="0">
-      <div class="card-top">
-        <div class="card-icon">🚗</div>
-        <span class="status-badge status-live">Live</span>
-      </div>
-      <div>
-        <div class="card-name">CrashGuide</div>
-        <div class="card-target">KFZ-Besitzer</div>
-      </div>
-      <p class="card-desc">KI-Schadenbewertung nach Unfall: Fotos hochladen, SF-Klassen-Berechnung, Kostenindikation — in Minuten statt Tagen.</p>
-      <div class="card-footer">
-        <span class="card-price">ab 3,99 €</span>
-        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </div>
-
-    <div class="tool-card locked" onclick="showStop('RC Wertdossier')" role="button" tabindex="0">
-      <div class="card-top">
-        <div class="card-icon">📊</div>
-        <span class="status-badge status-live">Live</span>
-      </div>
-      <div>
-        <div class="card-name">RC Wertdossier</div>
-        <div class="card-target">Oldtimer-Käufer & -Verkäufer</div>
-      </div>
-      <p class="card-desc">KI-gestützte Fahrzeugbewertung für den DACH-Klassikermarkt. Marktpreis, Zustandseinschätzung, exportierbares Dossier.</p>
-      <div class="card-footer">
-        <span class="card-price">4,99 € / Dossier</span>
-        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </div>
-
-    <div class="tool-card locked" onclick="showStop('Oldtimer Eiswerk')" role="button" tabindex="0">
-      <div class="card-top">
-        <div class="card-icon">❄️</div>
-        <span class="status-badge status-live">Aktiv</span>
-      </div>
-      <div>
-        <div class="card-name">Oldtimer Eiswerk</div>
-        <div class="card-target">Fahrzeugaufbereitung</div>
-      </div>
-      <p class="card-desc">Digitales Kundentool für Trockeneis-Strahlen. KI-Bildanalyse bewertet Reinigungsgrad und gibt eine Soforteinschätzung.</p>
-      <div class="card-footer">
-        <span class="card-price">Kostenfrei (Lead-Tool)</span>
-        <span class="card-link">Zum Tool <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </div>
-
-    <div class="tool-card locked" onclick="showStop('GTÜ Rollout Dashboard')" role="button" tabindex="0">
-      <div class="card-top">
-        <div class="card-icon">📈</div>
-        <span class="status-badge status-intern">Intern</span>
-      </div>
-      <div>
-        <div class="card-name">GTÜ Rollout Dashboard</div>
-        <div class="card-target">Internes Steuerungstool</div>
-      </div>
-      <p class="card-desc">Szenario-Modell für den bundesweiten GTÜ-Rollout. Bundesland-Auswahl, konservative / optimistische Umsatzprojektion.</p>
-      <div class="card-footer">
-        <span class="card-price">Intern</span>
-        <span class="card-link">Dashboard <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg></span>
-      </div>
-    </div>
-
+  <div class="tools-grid" id="tools-grid">
+    <p style="color:var(--muted);font-size:0.9rem">Lade Tools…</p>
   </div>
 </section>
 
@@ -712,6 +585,90 @@ function closeStop() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeStop();
 });
+
+// ── TOOLS (aus Supabase geladen) ──
+var SUPABASE_URL = 'https://ysqzdqazcgyuzdorauiq.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_v4kXJa0y-2EHsCFPqBFHfg_QvzKLnt2';
+
+var STATUS_BADGES = {
+  live:   { cls: 'status-live',   label: 'Live' },
+  wip:    { cls: 'status-intern', label: 'In Arbeit' },
+  pause:  { cls: 'status-pause',  label: 'Pause' },
+  intern: { cls: 'status-intern', label: 'Intern' }
+};
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function loadTools() {
+  fetch(SUPABASE_URL + '/rest/v1/rc_projekte?select=*&oeffentlich=eq.true&order=sort_order.asc', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!Array.isArray(data)) data = [];
+    var seen = {};
+    var tools = [];
+    data.forEach(function(p) {
+      if (p.name && !seen[p.name]) { seen[p.name] = true; tools.push(p); }
+    });
+    renderToolsGrid(tools);
+  })
+  .catch(function(e) {
+    console.error('Tools konnten nicht geladen werden:', e);
+    document.getElementById('tools-grid').innerHTML = '<p style="color:var(--muted);font-size:0.9rem">Tools konnten nicht geladen werden.</p>';
+  });
+}
+
+function renderToolsGrid(tools) {
+  var grid = document.getElementById('tools-grid');
+  if (tools.length === 0) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:0.9rem">Noch keine Tools verfügbar.</p>';
+    return;
+  }
+
+  var arrow = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10L10 2M4 2h6v6"/></svg>';
+  var html = '';
+
+  tools.forEach(function(p) {
+    var badge = STATUS_BADGES[p.status] || { cls: 'status-intern', label: escapeHtml(p.status || '—') };
+    var icon = escapeHtml(p.icon || '🔧');
+    var name = escapeHtml(p.name || '—');
+    var brand = escapeHtml(p.brand || '');
+    var desc = escapeHtml(p.beschreibung || '');
+    var price = p.stripe_info ? '<span class="card-price">' + escapeHtml(p.stripe_info) + '</span>' : '<span></span>';
+
+    var inner =
+      '<div class="card-top">' +
+        '<div class="card-icon">' + icon + '</div>' +
+        '<span class="status-badge ' + badge.cls + '">' + badge.label + '</span>' +
+      '</div>' +
+      '<div>' +
+        '<div class="card-name">' + name + '</div>' +
+        '<div class="card-target">' + brand + '</div>' +
+      '</div>' +
+      '<p class="card-desc">' + desc + '</p>' +
+      '<div class="card-footer">' + price + '<span class="card-link">Zum Tool ' + arrow + '</span></div>';
+
+    if (p.status === 'live' && p.live_url) {
+      html += '<a href="' + escapeHtml(p.live_url) + '" target="_blank" rel="noopener" class="tool-card">' + inner + '</a>';
+    } else {
+      html += '<div class="tool-card locked" data-name="' + name + '" role="button" tabindex="0">' + inner + '</div>';
+    }
+  });
+
+  grid.innerHTML = html;
+}
+
+document.getElementById('tools-grid').addEventListener('click', function(e) {
+  var card = e.target.closest('.tool-card.locked');
+  if (card) showStop(card.getAttribute('data-name'));
+});
+
+loadTools();
 </script>
 
 </body>
