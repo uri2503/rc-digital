@@ -575,6 +575,10 @@ input.doc-file-input { display: none; }
         </div>
       </div>
       <div class="panel-section">
+        <div class="panel-label">Icon (Emoji)</div>
+        <input type="text" class="panel-field" id="p-icon" placeholder="z.B. 🔧 🚗 📋">
+      </div>
+      <div class="panel-section">
         <div class="panel-label">Beschreibung (öffentlich)</div>
         <textarea class="panel-field" id="p-beschreibung" placeholder="Was macht dieses Tool? Für wen?"></textarea>
       </div>
@@ -1030,6 +1034,7 @@ function openPanel(id) {
   document.getElementById('panel-name').textContent = p.name || '—';
   populateBrandOptions(p.brand);
   document.getElementById('p-status').value = p.status || 'wip';
+  document.getElementById('p-icon').value = p.icon || '';
   document.getElementById('p-beschreibung').value = p.beschreibung || '';
   document.getElementById('p-notizen').value = p.notizen || '';
 
@@ -1113,6 +1118,7 @@ function savePanel() {
     brand:        brandValue,
     status:       document.getElementById('p-status').value,
     oeffentlich:  document.getElementById('p-public').checked,
+    icon:         document.getElementById('p-icon').value.trim(),
     beschreibung: document.getElementById('p-beschreibung').value,
     notizen:      document.getElementById('p-notizen').value,
     repo:         document.getElementById('p-repo').value.trim(),
